@@ -32,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+      
       final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       final User? user = userCredential.user;
 
@@ -78,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
       'address': walletAddress,
     };
   }
-
+  
   @override
   Widget build(BuildContext context) {
     const Color qBlack = Color(0xFF0A0A0A);
@@ -246,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                     Flexible(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width - 104,
+                          maxWidth: MediaQuery.of(context).size.width - 104, // Adjust for padding and icon
                         ),
                         child: const Text(
                           'Trusted by institutional traders and suppliers',
