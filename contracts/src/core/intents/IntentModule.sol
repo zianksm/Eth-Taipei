@@ -43,6 +43,7 @@ contract IntentModule {
         external
         returns (bool success)
     {
+        // ensure that the orders getting filled are atleast on the same ratio
         uint256 fillRatio = MathUtils.calculateRatio(inAmount, outAmount);
 
         IIntent.IntentSpecification storage spec = intents[IntentLibrary.toId(inToken, outToken)];
