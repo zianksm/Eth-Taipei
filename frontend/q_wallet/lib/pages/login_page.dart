@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:q_wallet/pages/home_page.dart';
+import 'package:web3dart/web3dart.dart' as web3;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert'; // For utf8 encoding
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +16,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool _isSigningIn = false;
+  static const _storage = FlutterSecureStorage();
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isSigningIn = true);
@@ -28,12 +32,28 @@ class _LoginPageState extends State<LoginPage> {
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WalletHomePage()),
-        );
+      
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        // Generate EVM wallet using UID
+        final walletData = _generateWalletFromUid(user.uid);
+        final walletAddress = walletData['address']!;
+        final privateKey = walletData['privateKey']!;
+
+        // Optionally store the private key securely
+        await _storage.write(key: 'privateKey_${user.uid}', value: privateKey);
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => WalletHomePage(
+              ),
+            ),
+          );
+        }
       }
     } catch (e, stackTrace) {
       if (mounted) {
@@ -46,6 +66,20 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Map<String, String> _generateWalletFromUid(String uid) {
+    // Use UID as seed to generate a deterministic private key
+    final seed = utf8.encode(uid); // Convert UID to bytes
+    final privateKeyBytes = web3.keccak256(seed); // 32-byte private key
+    final privateKey = web3.bytesToHex(privateKeyBytes, include0x: true); // Hex string with 0x
+    final credentials = web3.EthPrivateKey(privateKeyBytes); // Create from bytes
+    final walletAddress = credentials.address.toString(); // Get address as hex string
+
+    return {
+      'privateKey': privateKey,
+      'address': walletAddress,
+    };
+  }
+  
   @override
   Widget build(BuildContext context) {
     const Color qBlack = Color(0xFF0A0A0A);
@@ -62,7 +96,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo and Title
               Row(
                 children: [
                   Container(
@@ -90,8 +123,6 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 60),
-
-              // Hero Section Title
               const Text(
                 'Commodity Finance',
                 textAlign: TextAlign.left,
@@ -120,8 +151,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Subtitle
               const Text(
                 'The protocol that transforms invoices into working capital. Secure, efficient, and built for the modern commodity trader.',
                 textAlign: TextAlign.left,
@@ -132,8 +161,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 40),
-
-              // Google Sign-In Button (Centered)
               Center(
                 child: ElevatedButton(
                   onPressed: _isSigningIn ? null : () => _signInWithGoogle(),
@@ -188,8 +215,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 40),
-
-              // Trusted By Section (Centered, Wraps Instead of Ellipsis)
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
