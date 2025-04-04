@@ -17,4 +17,8 @@ abstract contract TokenAction {
     function transferFromToSelf(address token, address from, uint256 amount) internal {
         transferFrom(token, from, address(this), amount);
     }
+
+    function transferFromUserToSelf(address token, uint256 amount) internal {
+        transferFrom(token, msg.sender, address(this), amount);
+    }
 }
