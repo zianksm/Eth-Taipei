@@ -14,7 +14,7 @@ contract FundsCustody is TokenAction {
     // this is used for holding user free balances, after the intent is executed, this is where user funds will go to
     mapping(address => mapping(address => uint256)) public free;
 
-    function withdrawLocked(address token, uint256 amount) external {
+    function unlock(address token, uint256 amount) external {
         // TODO custom errors
         require(locked[msg.sender][token] >= amount);
 
@@ -23,7 +23,13 @@ contract FundsCustody is TokenAction {
         transfer(token, msg.sender, amount);
     }
 
-    function withdrawFree(address token, uint256 amount) external {
+    function lock(address token, uint256 amount) external {
+        locked[msg.sender][token] += amount;
+
+        transferFromUserToSelf(token, amount);
+    }
+
+    function collect(address token, uint256 amount) external {
         // TODO custom errors
         require(free[msg.sender][token] >= amount);
 
