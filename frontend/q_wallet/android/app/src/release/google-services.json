@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "182591384947",
+    "project_id": "eth-taipei",
+    "storage_bucket": "eth-taipei.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182591384947:android:7f591001248e303a51e906",
+        "android_client_info": {
+          "package_name": "com.eth.q_wallet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182591384947-lb1g4ifas9r1472mchm9kk40ds51o2ro.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eth.q_wallet",
+            "certificate_hash": "f0fb896a1abd369d42f200d41123e42d60586c0e"
+          }
+        },
+        {
+          "client_id": "182591384947-omj341707vuvqep062pq4lcrgugds6m7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eth.q_wallet",
+            "certificate_hash": "0f2655f152a8dad556da04f4675f4656320c9986"
+          }
+        },
+        {
+          "client_id": "182591384947-iarlbk0pcte25bemdv0hmvmiqj5or7ga.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsyICHXHTJOA0wjh_UNsuCYA_7AbEvHKQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182591384947-iarlbk0pcte25bemdv0hmvmiqj5or7ga.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
