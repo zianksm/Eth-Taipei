@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart'; // Add Firebase Core
 import 'package:q_wallet/pages/home_page.dart';
+import 'package:q_wallet/pages/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Required for async initialization
+  await Firebase.initializeApp(); // Initialize Firebase
   runApp(const WalletApp());
 }
 
@@ -20,7 +24,7 @@ class WalletApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const WalletHomePage(),
+      home: const LoginPage(),
     );
   }
 }

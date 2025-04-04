@@ -1,4 +1,4 @@
-package com.example.q_wallet
+package com.eth.q_wallet
 
 import io.flutter.embedding.android.FlutterActivity
 
