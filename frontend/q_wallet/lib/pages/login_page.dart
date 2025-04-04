@@ -1,63 +1,240 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:q_wallet/pages/home_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
-  Future<void> _signInWithGoogle(BuildContext context) async {
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool _isSigningIn = false;
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isSigningIn = true);
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-
-      if (googleUser == null) return;
-
+      if (googleUser == null) {
+        setState(() => _isSigningIn = false);
+        return;
+      }
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-
       await FirebaseAuth.instance.signInWithCredential(credential);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const WalletHomePage()),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WalletHomePage()),
+        );
+      }
+    } catch (e, stackTrace) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const Color qBlack = Color(0xFF0A0A0A);
+    const Color qWhite = Color(0xFFF8F8F8);
+    const Color qGray = Color(0xFF1A1A1A);
+    const Color qPrimary = Color(0xFF0055FF);
+    const Color qAccent = Color(0xFF00F0FF);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+      backgroundColor: qBlack,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Welcome to Q Wallet',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              // Logo and Title
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      gradient: const LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [qPrimary, qAccent],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Q WALLET',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: qWhite,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: () => _signInWithGoogle(context),
-                icon: const Icon(Icons.login),
-                label: const Text('Sign in with Google'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              const SizedBox(height: 60),
+
+              // Hero Section Title
+              const Text(
+                'Commodity Finance',
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: qWhite,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [qPrimary, qAccent],
+                ).createShader(bounds),
+                child: const Text(
+                  'Reinvented',
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: qWhite,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Subtitle
+              const Text(
+                'The protocol that transforms invoices into working capital. Secure, efficient, and built for the modern commodity trader.',
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                  fontFamily: 'Inter',
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Google Sign-In Button (Centered)
+              Center(
+                child: ElevatedButton(
+                  onPressed: _isSigningIn ? null : () => _signInWithGoogle(),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ).copyWith(
+                    foregroundColor: MaterialStateProperty.all(qBlack),
+                    overlayColor: MaterialStateProperty.all(Colors.transparent),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [qPrimary, qAccent],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isSigningIn)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(qBlack),
+                            ),
+                          )
+                        else
+                          const FaIcon(FontAwesomeIcons.google, size: 20),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Login with Google',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                            color: qBlack,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Trusted By Section (Centered, Wraps Instead of Ellipsis)
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: qGray, width: 2),
+                            color: qGray,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '.eth',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'RobotoMono',
+                                color: qWhite,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 16),
+                    Flexible(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width - 104, // Adjust for padding and icon
+                        ),
+                        child: const Text(
+                          'Trusted by institutional traders and suppliers',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
