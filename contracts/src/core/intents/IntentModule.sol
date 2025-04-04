@@ -29,6 +29,9 @@ contract IntentModule is TokenAction {
     // DOESN'T PERFORM ACTUAL BALANCE CHECKS, INTENT MAY FAIL
     // IT'S ADVISED TO ADD AN INTENT WITHIN OR CLOSE TO MARKET PRICE SINCE NOT DOING SO RISK YOUR ORDER BEING UNFULFILLED
     // SINCE THE INTENT LOOKS AT THE RATIO OF THE IN & OUT AMOUNT AND TRIES TO PARTIALLY FILL YOUR ORDER BASED ON THAT
+    //
+    // negative amount means you want to remove tokens from intents
+    // positive amount means you want to add token to intents
     function modifyIntents(address inToken_, address outToken_, int256 inAmount, int256 outAmount)
         external
         onlySelf
