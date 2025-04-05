@@ -6,8 +6,8 @@ import "intents-framework/Base7683.sol";
 import {IIntent} from "./../../interfaces/IIntent.sol";
 
 contract IntentHub is FundsCustody, MailboxClient {
-    address verifier;
-    uint32 verifierChainId;
+    address public verifier;
+    uint32 public verifierChainId;
 
     modifier onlyVerifier(address caller) {
         // TODO custom errors
