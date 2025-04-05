@@ -1,0 +1,554 @@
+[
+    {
+        "type": "constructor",
+        "inputs": [
+            {
+                "name": "_prover",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "mailbox",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "hubChain",
+                "type": "uint32",
+                "internalType": "uint32"
+            }
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "PACKAGE_VERSION",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "_setTestVerifier",
+        "inputs": [
+            {
+                "name": "newVerifier",
+                "type": "address",
+                "internalType": "contract IProofVerifier"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "handle",
+        "inputs": [
+            {
+                "name": "_origin",
+                "type": "uint32",
+                "internalType": "uint32"
+            },
+            {
+                "name": "_sender",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_message",
+                "type": "bytes",
+                "internalType": "bytes"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "payable"
+    },
+    {
+        "type": "function",
+        "name": "hook",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "contract IPostDispatchHook"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "interchainSecurityModule",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "contract IInterchainSecurityModule"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "localDomain",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint32",
+                "internalType": "uint32"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "mailbox",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "contract IMailbox"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "orders",
+        "inputs": [
+            {
+                "name": "",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "token",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "amount",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "swiftBicCode",
+                "type": "bytes8",
+                "internalType": "bytes8"
+            },
+            {
+                "name": "accountNumber",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "recipient",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "minimumAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "owner",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "prover",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "renounceOwnership",
+        "inputs": [],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setHook",
+        "inputs": [
+            {
+                "name": "_hook",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setHub",
+        "inputs": [
+            {
+                "name": "hub",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setHubChain",
+        "inputs": [
+            {
+                "name": "chain",
+                "type": "uint32",
+                "internalType": "uint32"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setInterchainSecurityModule",
+        "inputs": [
+            {
+                "name": "_module",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "settleVerified",
+        "inputs": [
+            {
+                "name": "proof",
+                "type": "tuple",
+                "internalType": "struct Proof",
+                "components": [
+                    {
+                        "name": "seal",
+                        "type": "tuple",
+                        "internalType": "struct Seal",
+                        "components": [
+                            {
+                                "name": "verifierSelector",
+                                "type": "bytes4",
+                                "internalType": "bytes4"
+                            },
+                            {
+                                "name": "seal",
+                                "type": "bytes32[8]",
+                                "internalType": "bytes32[8]"
+                            },
+                            {
+                                "name": "mode",
+                                "type": "uint8",
+                                "internalType": "enum ProofMode"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "callGuestId",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                    },
+                    {
+                        "name": "length",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "callAssumptions",
+                        "type": "tuple",
+                        "internalType": "struct CallAssumptions",
+                        "components": [
+                            {
+                                "name": "proverContractAddress",
+                                "type": "address",
+                                "internalType": "address"
+                            },
+                            {
+                                "name": "functionSelector",
+                                "type": "bytes4",
+                                "internalType": "bytes4"
+                            },
+                            {
+                                "name": "settleChainId",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "settleBlockNumber",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "settleBlockHash",
+                                "type": "bytes32",
+                                "internalType": "bytes32"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "transferId",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "recipient",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "amount",
+                "type": "int256",
+                "internalType": "int256"
+            },
+            {
+                "name": "id",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "transferOwnership",
+        "inputs": [
+            {
+                "name": "newOwner",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "usedTransferIds",
+        "inputs": [
+            {
+                "name": "",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "verifier",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "contract IProofVerifier"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "verify",
+        "inputs": [
+            {
+                "name": "",
+                "type": "tuple",
+                "internalType": "struct Proof",
+                "components": [
+                    {
+                        "name": "seal",
+                        "type": "tuple",
+                        "internalType": "struct Seal",
+                        "components": [
+                            {
+                                "name": "verifierSelector",
+                                "type": "bytes4",
+                                "internalType": "bytes4"
+                            },
+                            {
+                                "name": "seal",
+                                "type": "bytes32[8]",
+                                "internalType": "bytes32[8]"
+                            },
+                            {
+                                "name": "mode",
+                                "type": "uint8",
+                                "internalType": "enum ProofMode"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "callGuestId",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                    },
+                    {
+                        "name": "length",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "callAssumptions",
+                        "type": "tuple",
+                        "internalType": "struct CallAssumptions",
+                        "components": [
+                            {
+                                "name": "proverContractAddress",
+                                "type": "address",
+                                "internalType": "address"
+                            },
+                            {
+                                "name": "functionSelector",
+                                "type": "bytes4",
+                                "internalType": "bytes4"
+                            },
+                            {
+                                "name": "settleChainId",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "settleBlockNumber",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "settleBlockHash",
+                                "type": "bytes32",
+                                "internalType": "bytes32"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "transferId",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "recipient",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "amount",
+                "type": "int256",
+                "internalType": "int256"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "event",
+        "name": "HookSet",
+        "inputs": [
+            {
+                "name": "_hook",
+                "type": "address",
+                "indexed": false,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "Initialized",
+        "inputs": [
+            {
+                "name": "version",
+                "type": "uint8",
+                "indexed": false,
+                "internalType": "uint8"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "IsmSet",
+        "inputs": [
+            {
+                "name": "_ism",
+                "type": "address",
+                "indexed": false,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferred",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "error",
+        "name": "InvalidChainId",
+        "inputs": []
+    }
+]

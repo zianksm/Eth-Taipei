@@ -1,2 +1,1 @@
-export * as eco from "./eco/index.js";
-export * as hyperlane7683 from "./hyperlane7683/index.js";
+export * as offramp7683 from './offramp7683/index.js';

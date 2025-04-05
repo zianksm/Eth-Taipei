@@ -10,7 +10,7 @@ import { password } from "@inquirer/prompts";
 
 import { MNEMONIC, PRIVATE_KEY } from "../config/index.js";
 import { NonceKeeperWallet } from "../NonceKeeperWallet.js";
-import { Erc20__factory } from "../typechain/factories/contracts/Erc20__factory.js";
+import { Erc20__factory } from "../typechain/factories/Erc20__factory.js";
 
 export async function getMultiProvider(chainMetadata: ChainMap<ChainMetadata>) {
   const multiProvider = new MultiProvider(chainMetadata);

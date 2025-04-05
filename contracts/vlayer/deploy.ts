@@ -1,5 +1,5 @@
-import proverSpec from "../contracts/out/WebProofProver.sol/WebProofProver";
-import verifierSpec from "../contracts/out/WebProofVerifier.sol/WebProofVerifier";
+import proverSpec from "../out/WebProofProver.sol/WebProofProver";
+import verifierSpec from "../out/WebProofVerifier.sol/WebProofVerifier";
 import {
     deployVlayerContracts,
     writeEnvVariables,
@@ -11,6 +11,7 @@ const config = getConfig();
 const { prover, verifier } = await deployVlayerContracts({
     proverSpec,
     verifierSpec,
+    verifierArgs: ["0x6966b0E55883d49BFB24539356a2f8A673E02039", 11155420]
 });
 
 writeEnvVariables(".env", {

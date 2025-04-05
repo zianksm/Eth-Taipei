@@ -105,7 +105,7 @@ contract BaseTest is Test {
         uint32 deadline = type(uint32).max;
         bytes32 orderType = "";
 
-        bytes memory data = abi.encode(IIntent.OrderData(address(token), amount, IIntent.BankType.WISE, 0, 0, "",0));
+        bytes memory data = abi.encode(IIntent.OrderData(address(token), amount, 0, 0, "", 0));
 
         return OnchainCrossChainOrder(deadline, orderType, data);
     }

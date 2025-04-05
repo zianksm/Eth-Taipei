@@ -22,14 +22,9 @@ interface IIntent {
         uint256 outAmount;
     }
 
-    enum BankType {
-        WISE
-    }
-
     struct OrderData {
         address token;
         uint256 amount;
-        BankType bankType;
         bytes8 swiftBicCode; // bank identifier OCBCSGSGXXX
         uint256 accountNumber; //
         string recipient;
@@ -39,7 +34,6 @@ interface IIntent {
     struct OrderReserves {
         address token;
         uint256 amount;
-        BankType bankType;
         uint256 bankAccountDest;
         bytes8 swiftBicCode; // bank identifier OCBCSGSGXXX
         string recipient;

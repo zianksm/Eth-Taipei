@@ -4,6 +4,7 @@ import {IntentLibrary} from "./../../libraries/Intent.sol";
 import "intents-framework/Base7683.sol";
 import {IIntent} from "./../../interfaces/IIntent.sol";
 import {ReserveHandler} from "./OrderReserve.sol";
+import "intents-framework/ERC7683/IERC7683.sol";
 
 // needed to lock user funds for the intent, because if not then there's a possibility the intent fails and create a DOS situation
 // where intent keeps failing, so user funds needs to be locked here
@@ -47,6 +48,11 @@ abstract contract FundsCustody is ReserveHandler {
 
         orderData = abi.decode(_order.orderData, (IIntent.OrderData));
         _createOrder(id, orderData);
+
+        FillInstruction[] memory instruction = new FillInstruction[](1);
+        instruction[0] = FillInstruction(0, "", abi.encode(orderData));
+
+        resolvedOrder.fillInstructions = instruction;
 
         // since we're doing an off/on ramp, no tokens is actually transffered to other chains, so we must opt-out
         // from the standard accounting and transfer the token here, it'll be released after the zk proof is actually verified

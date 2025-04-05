@@ -54,7 +54,6 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         IIntent.OrderReserves storage reserves = orderReserves[id];
         reserves.amount += data.amount;
         reserves.token = data.token;
-        reserves.bankType = data.bankType;
         reserves.bankAccountDest = data.accountNumber;
         reserves.recipient = data.recipient;
         reserves.swiftBicCode = data.swiftBicCode;
