@@ -49,4 +49,7 @@ export class Offramp7683Listener extends BaseListener<any, any, ParsedArgs> {
   }
 }
 
-export const create = () => new Offramp7683Listener().create();
+export const create = () => {
+  new Offramp7683Listener().create()
+
+};

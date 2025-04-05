@@ -27,14 +27,6 @@ import {
 } from "@vlayer/sdk/config";
 import { ethers } from "ethers";
 
-let config = getConfig();
-const { chain, ethClient, account, proverUrl, confirmations } =
-  await createContext(config);
-const vlayer = createVlayerClient({
-  url: proverUrl,
-  token: config.token,
-});
-
 
 
 export class Offramp7683Filler extends BaseFiller<Offramp7683Metadata, ParsedArgs, IntentData> {
@@ -64,6 +56,27 @@ export class Offramp7683Filler extends BaseFiller<Offramp7683Metadata, ParsedArg
     originChainName: string,
     blockNumber: number
   ): Promise<void> {
+
+
+    let config = getConfig(
+      {
+        chainName: metadata.verifierChainName,
+        vlayerEnv: "testnet",
+        jsonRpcUrl: metadata.proverJsonRpc,
+        // ugly but meh
+        privateKey: metadata.proverExamplePk as any,
+        proverUrl: metadata.proverJsonRpc,
+
+      }
+    );
+    const { chain, ethClient, account, proverUrl, confirmations } =
+      await createContext(config);
+
+    let vlayer = createVlayerClient({
+      url: proverUrl,
+      token: config.token,
+    });
+
 
     const url = "https://wise.com/en/track/783e11c9ec7846d799716d1a159d2a3b?utm_medium=rmt&utm_source=android&utm_content=activity-page"
     const match = url.match(/^https:\/\/wise\.com\/en\/track\/([^?]+)/);
@@ -143,4 +156,8 @@ export class Offramp7683Filler extends BaseFiller<Offramp7683Metadata, ParsedArg
 }
 
 export const create = (multiProvider: MultiProvider) =>
+{
+ 
+    
   new Offramp7683Filler(multiProvider).create();
+}
