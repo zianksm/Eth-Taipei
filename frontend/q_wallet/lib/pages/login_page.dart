@@ -109,16 +109,24 @@ class _LoginPageState extends State<LoginPage> {
         await _storage.write(key: 'privateKey_${user.uid}', value: privateKey);
         if (selectedEns != null && selectedEns.isNotEmpty) {
           await _storage.write(key: 'ensName_${user.uid}', value: selectedEns);
-        }
-
-        if (mounted) {
+          // Navigate to WalletHomePage only if ENS is selected and stored
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const WalletHomePage(),
+              ),
+            );
+          }
+        } else if (mounted) {
+          // If no ENS is selected, go to WebviewPage
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const WalletHomePage(), // Navigate to HomePage
+              builder: (context) => WebviewPage(privateKey: privateKey),
             ),
           );
-      }
+        }
         
       }
     } catch (e, stackTrace) {

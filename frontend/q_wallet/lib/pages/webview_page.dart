@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:q_wallet/pages/login_page.dart';
 
 class WebviewPage extends StatefulWidget {
   final String privateKey;
@@ -144,130 +145,135 @@ class _WebviewPageState extends State<WebviewPage> {
     final ensUrl = dotenv.env['ENS_URL'] ?? 'https://sepolia.app.ens.domains';
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // White icon for visibility
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context); // Go back to previous page
-            }
-          },
-        ),
-        title: const Text('Webview', style: TextStyle(color: Colors.white)), // White text
-        backgroundColor: Colors.transparent, // Transparent background
-        elevation: 0, // No shadow
-      ),
-      body: InAppWebView(
-        initialUrlRequest: URLRequest(url: WebUri(ensUrl)),
-        initialOptions: InAppWebViewGroupOptions(
-          crossPlatform: InAppWebViewOptions(
-            javaScriptEnabled: true,
-            useShouldOverrideUrlLoading: true,
-            javaScriptCanOpenWindowsAutomatically: true,
-          ),
-        ),
-        onWebViewCreated: (controller) async {
-          _webViewController = controller;
-          print('Webview created, injecting provider');
-          await controller.evaluateJavascript(source: getEthereumProviderScript());
+      body: Stack(
+        children: [
+          InAppWebView(
+            initialUrlRequest: URLRequest(url: WebUri(ensUrl)),
+            initialOptions: InAppWebViewGroupOptions(
+              crossPlatform: InAppWebViewOptions(
+                javaScriptEnabled: true,
+                useShouldOverrideUrlLoading: true,
+                javaScriptCanOpenWindowsAutomatically: true,
+              ),
+            ),
+            onWebViewCreated: (controller) async {
+              _webViewController = controller;
+              print('Webview created, injecting provider');
+              await controller.evaluateJavascript(source: getEthereumProviderScript());
 
-          controller.addJavaScriptHandler(
-            handlerName: 'requestAccounts',
-            callback: (args) async {
-              print('requestAccounts called with args: $args');
-              if (_isWalletConnected) {
-                final address = '0x' + _credentials.address.toString();
-                print('Returning connected address: $address');
-                return [address];
-              }
-              final shouldConnect = await _showConnectDialog();
-              if (shouldConnect) {
-                setState(() => _isWalletConnected = true);
-                final address = '0x' + _credentials.address.toString();
-                print('Connected address: $address');
-                await controller.evaluateJavascript(
-                  source: "if (window.accountsChangedCallback) window.accountsChangedCallback(['$address']); window.ethereum.emit('accountsChanged', ['$address']);",
-                );
-                return [address];
-              }
-              return [];
-            },
-          );
-
-          controller.addJavaScriptHandler(
-            handlerName: 'signPersonalMessage',
-            callback: (args) async {
-              if (!_isWalletConnected) throw Exception('Wallet not connected');
-              final message = args[0] as String;
-              final signature = signPersonalMessage(_credentials, message);
-              return signature;
-            },
-          );
-
-          controller.addJavaScriptHandler(
-            handlerName: 'rpcCall',
-            callback: (args) async {
-              final method = args[0] as String;
-              final params = args[1] as List<dynamic>;
-              try {
-                if (method == 'eth_getBalance') {
-                  final address = EthereumAddress.fromHex(params[0]);
-                  final balance = await _client.getBalance(address);
-                  return '0x${balance.getInWei.toRadixString(16)}';
-                }else if (method == 'eth_getTransactionByHash') { // Added block starts here
-                  final txHash = params[0] as String;
-                  final transaction = await _client.getTransactionByHash(txHash);
-                  if (transaction == null) {
-                    return null; // Ethereum RPC returns null for non-existent transactions
+              controller.addJavaScriptHandler(
+                handlerName: 'requestAccounts',
+                callback: (args) async {
+                  print('requestAccounts called with args: $args');
+                  if (_isWalletConnected) {
+                    final address = '0x' + _credentials.address.toString();
+                    print('Returning connected address: $address');
+                    return [address];
                   }
-                  return {
-                    'hash': transaction.hash,
-                    'from': transaction.from?.toString(),
-                    'to': transaction.to?.toString(),
-                    'value': '0x${transaction.value.getInWei.toRadixString(16)}',
-                    'gas': '0x${transaction.gas?.toRadixString(16)}',
-                    'gasPrice': '0x${transaction.gasPrice.getInWei.toRadixString(16)}',
-                    'nonce': '0x${transaction.nonce.toRadixString(16)}',
-                    'blockHash': transaction.blockHash,
-                    'blockNumber': transaction.blockNumber != null ? '0x${(transaction.blockNumber as dynamic).toInt().toRadixString(16)}' : null,
-                    'transactionIndex': transaction.transactionIndex != null ? '0x${transaction.transactionIndex!.toRadixString(16)}' : null,
-                    'input': transaction.input != null ? '0x${bytesToHex(transaction.input!, include0x: false)}' : '0x',
-                  }; // Added block ends here
-                }else if (method == 'eth_sendTransaction') {
-                  final tx = params[0] as Map<String, dynamic>;
-                  final transaction = Transaction(
-                    to: EthereumAddress.fromHex(tx['to']),
-                    from: EthereumAddress.fromHex(tx['from']),
-                    data: tx['data'] != null ? hexToBytes(tx['data']) : null,
-                    gasPrice: tx['gasPrice'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['gasPrice'].substring(2), radix: 16)) : null,
-                    maxGas: tx['gas'] != null ? int.parse(tx['gas'].substring(2), radix: 16) : null,
-                    maxFeePerGas: tx['maxFeePerGas'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['maxFeePerGas'].substring(2), radix: 16)) : null,
-                    maxPriorityFeePerGas: tx['maxPriorityFeePerGas'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['maxPriorityFeePerGas'].substring(2), radix: 16)) : null,
-                    nonce: tx['nonce'] != null ? int.parse(tx['nonce'].substring(2), radix: 16) : null,
-                    value: tx['value'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['value'].substring(2), radix: 16)) : null,
-                  );
-                  final txHash = await _client.sendTransaction(_credentials, transaction, chainId: int.parse(chainId));
-                  print('Transaction sent: $txHash');
-                  return txHash;
-                }
-                return 'Method not implemented';
-              } catch (e) {
-                return 'Error: $e';
-              }
+                  final shouldConnect = await _showConnectDialog();
+                  if (shouldConnect) {
+                    setState(() => _isWalletConnected = true);
+                    final address = '0x' + _credentials.address.toString();
+                    print('Connected address: $address');
+                    await controller.evaluateJavascript(
+                      source: "if (window.accountsChangedCallback) window.accountsChangedCallback(['$address']); window.ethereum.emit('accountsChanged', ['$address']);",
+                    );
+                    return [address];
+                  }
+                  return [];
+                },
+              );
+
+              controller.addJavaScriptHandler(
+                handlerName: 'signPersonalMessage',
+                callback: (args) async {
+                  if (!_isWalletConnected) throw Exception('Wallet not connected');
+                  final message = args[0] as String;
+                  final signature = signPersonalMessage(_credentials, message);
+                  return signature;
+                },
+              );
+
+              controller.addJavaScriptHandler(
+                handlerName: 'rpcCall',
+                callback: (args) async {
+                  final method = args[0] as String;
+                  final params = args[1] as List<dynamic>;
+                  try {
+                    if (method == 'eth_getBalance') {
+                      final address = EthereumAddress.fromHex(params[0]);
+                      final balance = await _client.getBalance(address);
+                      return '0x${balance.getInWei.toRadixString(16)}';
+                    }else if (method == 'eth_getTransactionByHash') { // Added block starts here
+                      final txHash = params[0] as String;
+                      final transaction = await _client.getTransactionByHash(txHash);
+                      if (transaction == null) {
+                        return null; // Ethereum RPC returns null for non-existent transactions
+                      }
+                      return {
+                        'hash': transaction.hash,
+                        'from': transaction.from?.toString(),
+                        'to': transaction.to?.toString(),
+                        'value': '0x${transaction.value.getInWei.toRadixString(16)}',
+                        'gas': '0x${transaction.gas?.toRadixString(16)}',
+                        'gasPrice': '0x${transaction.gasPrice.getInWei.toRadixString(16)}',
+                        'nonce': '0x${transaction.nonce.toRadixString(16)}',
+                        'blockHash': transaction.blockHash,
+                        'blockNumber': transaction.blockNumber != null ? '0x${(transaction.blockNumber as dynamic).toInt().toRadixString(16)}' : null,
+                        'transactionIndex': transaction.transactionIndex != null ? '0x${transaction.transactionIndex!.toRadixString(16)}' : null,
+                        'input': transaction.input != null ? '0x${bytesToHex(transaction.input!, include0x: false)}' : '0x',
+                      }; // Added block ends here
+                    }else if (method == 'eth_sendTransaction') {
+                      final tx = params[0] as Map<String, dynamic>;
+                      final transaction = Transaction(
+                        to: EthereumAddress.fromHex(tx['to']),
+                        from: EthereumAddress.fromHex(tx['from']),
+                        data: tx['data'] != null ? hexToBytes(tx['data']) : null,
+                        gasPrice: tx['gasPrice'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['gasPrice'].substring(2), radix: 16)) : null,
+                        maxGas: tx['gas'] != null ? int.parse(tx['gas'].substring(2), radix: 16) : null,
+                        maxFeePerGas: tx['maxFeePerGas'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['maxFeePerGas'].substring(2), radix: 16)) : null,
+                        maxPriorityFeePerGas: tx['maxPriorityFeePerGas'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['maxPriorityFeePerGas'].substring(2), radix: 16)) : null,
+                        nonce: tx['nonce'] != null ? int.parse(tx['nonce'].substring(2), radix: 16) : null,
+                        value: tx['value'] != null ? EtherAmount.fromBigInt(EtherUnit.wei, BigInt.parse(tx['value'].substring(2), radix: 16)) : null,
+                      );
+                      final txHash = await _client.sendTransaction(_credentials, transaction, chainId: int.parse(chainId));
+                      print('Transaction sent: $txHash');
+                      return txHash;
+                    }
+                    return 'Method not implemented';
+                  } catch (e) {
+                    return 'Error: $e';
+                  }
+                },
+              );
             },
-          );
-        },
-        onLoadStart: (controller, url) {
-          print('Loading: $url');
-        },
-        onLoadStop: (controller, url) async {
-          print('Loaded: $url');
-          await controller.evaluateJavascript(source: getEthereumProviderScript());
-        },
-        onConsoleMessage: (controller, consoleMessage) {
-          print('Web console: ${consoleMessage.message}');
-        },
-      ),
+            onLoadStart: (controller, url) {
+              print('Loading: $url');
+            },
+            onLoadStop: (controller, url) async {
+              print('Loaded: $url');
+              await controller.evaluateJavascript(source: getEthereumProviderScript());
+            },
+            onConsoleMessage: (controller, consoleMessage) {
+              print('Web console: ${consoleMessage.message}');
+            },
+          ),
+          Positioned(
+            left: 16, // Padding from left
+            top: 16,  // Padding from top (adjust for status bar if needed)
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  (route) => false, // Removes all previous routes
+                );
+              },
+            ),
+          ),
+        ]
+      )
     );
   }
 }
