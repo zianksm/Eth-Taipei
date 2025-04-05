@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {IntentLibrary} from "./../../libraries/Intent.sol";
 import {IIntent} from "./../../interfaces/IIntent.sol";
 import {IntentLibrary} from "./../../libraries/Intent.sol";
-import {FundsCustody} from "./Custody.sol";
+// import {FundsCustody} from "./Escrow.sol";
 import {MathUtils} from "./../../libraries/MathUtils.sol";
 import {TokenAction} from "./../TokenAction.sol";
 
@@ -11,7 +11,7 @@ contract IntentModule is TokenAction {
     using IntentLibrary for IIntent.Intents;
     using IntentLibrary for IIntent.IntentSpecification;
 
-    FundsCustody custody;
+    // FundsCustody custody;
 
     mapping(IIntent.IntentId => IIntent.IntentSpecification) public intents;
 
@@ -23,7 +23,7 @@ contract IntentModule is TokenAction {
     }
 
     function setCustody(address _custody) external onlySelf {
-        custody = FundsCustody(_custody);
+        // custody = FundsCustody(_custody);
     }
 
     // DOESN'T PERFORM ACTUAL BALANCE CHECKS, INTENT MAY FAIL
@@ -77,7 +77,7 @@ contract IntentModule is TokenAction {
 
     function _lock(address token, uint256 amount) internal {
         transferFromToSelf(token, msg.sender, amount);
-        custody.lock(token, amount);
+        // custody.lock(token, amount);
     }
 
     function _unlockTo(address token, address to, uint256 amount) internal {
@@ -86,6 +86,6 @@ contract IntentModule is TokenAction {
     }
 
     function _unlockToSelf(address token, uint256 amount) internal {
-        custody.unlock(token, amount);
+        // custody.unlock(token, amount);
     }
 }
