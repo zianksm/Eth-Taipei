@@ -57,7 +57,7 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         reserves.amount += amount;
         reserves.token = token;
         reserves.bankType = bankType;
-        reserves.bankAccountDest = bankAccountDest;
+        reserves.bankAccountDest = bankAccount;
     }
 
     function _ensureNotReserved(bytes32 id) internal {

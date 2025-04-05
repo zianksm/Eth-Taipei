@@ -81,5 +81,8 @@ contract IntentHub is FundsCustody, MailboxClient {
         // we don't need the amount here since the verifier should successfully verify the amount + proof before even calling this
         bytes32 id = abi.decode(_message, (bytes32));
         _settle(id);
+
+        // we also emit fill event for consistency sake
+        emit Filled(id, "", "");
     }
 }
