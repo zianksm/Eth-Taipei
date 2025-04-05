@@ -1,6 +1,8 @@
 pragma solidity ^0.8.0;
 
 interface IIntent {
+    function getOrderReserves(bytes32 id) external view returns (IIntent.OrderReserves memory);
+    
     type IntentId is bytes32;
 
     struct Call {
