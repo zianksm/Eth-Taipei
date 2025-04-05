@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "express": "^5.1.0",
-    "viem": "^2.25.0"
+    "viem": "^2.25.0",
+    "ethers": "5.7"
   }
 }

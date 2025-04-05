@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:web3dart/web3dart.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add Firebase Auth import
+import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TransactionTab extends StatefulWidget {
-  const TransactionTab({super.key}); // No uid parameter
+  const TransactionTab({super.key});
 
   @override
   State<TransactionTab> createState() => _TransactionTabState();
@@ -12,6 +15,9 @@ class TransactionTab extends StatefulWidget {
 
 class _TransactionTabState extends State<TransactionTab> {
   final storage = const FlutterSecureStorage();
+  bool _isOffRampActive = true; // Tracks active tab (Off-Ramp or On-Ramp)
+  int _offRampStep = 1; // Tracks Off-Ramp flow step
+  int _onRampStep = 1; // Tracks On-Ramp flow step
 
   Future<Map<String, String>?> _getWalletDetails() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -27,7 +33,7 @@ class _TransactionTabState extends State<TransactionTab> {
     }
 
     final credentials = EthPrivateKey.fromHex(storedPrivateKey);
-    final walletAddress = '0x' + credentials.address.toString(); // Includes '0x'
+    final walletAddress = '0x' + credentials.address.toString();
     return {
       'address': walletAddress,
       'privateKey': storedPrivateKey,
@@ -37,6 +43,7 @@ class _TransactionTabState extends State<TransactionTab> {
   @override
   Widget build(BuildContext context) {
     const qGray = Color(0xFFF5F5F5);
+    const qAccent = Color(0xFF00F0FF);
     const buttonTextColor = Color(0xFF0055FF);
 
     return Padding(
@@ -44,189 +51,200 @@ class _TransactionTabState extends State<TransactionTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ramp Type Selection
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              ElevatedButton.icon(
-                onPressed: () => _showTransferDialog(context),
-                icon: const Icon(Icons.send, size: 20),
-                label: const Text('Transfer'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: buttonTextColor,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isOffRampActive = true;
+                      _offRampStep = 1; // Reset to step 1
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isOffRampActive ? qGray : Colors.white,
+                    foregroundColor: buttonTextColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.arrow_upward, size: 20),
+                      SizedBox(width: 8),
+                      Text('Off-Ramp', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: () => _showReceiveDialog(context),
-                icon: const Icon(Icons.arrow_downward, size: 20),
-                label: const Text('Receive'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: buttonTextColor,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isOffRampActive = false;
+                      _onRampStep = 1; // Reset to step 1
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: !_isOffRampActive ? qGray : Colors.white,
+                    foregroundColor: buttonTextColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.arrow_downward, size: 20),
+                      SizedBox(width: 8),
+                      Text('On-Ramp', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Recent Transactions',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // Transaction 1: Buy
+          // Flow Container
+          Expanded(
+            child: _isOffRampActive ? _buildOffRampFlow(qGray, qAccent) : _buildOnRampFlow(qGray, qAccent),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOffRampFlow(Color qGray, Color qAccent) {
+    switch (_offRampStep) {
+      case 1: // Step 1: KYC Verification (Placeholder)
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: qGray, borderRadius: BorderRadius.circular(16)),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.blue[900]!.withOpacity(0.3),
+                child: Icon(Icons.person, color: qAccent, size: 32),
+              ),
+              const SizedBox(height: 16),
+              const Text('Complete KYC Verification', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text(
+                'To use Off-Ramp services, complete identity verification.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => setState(() => _offRampStep = 2), // Simulate KYC completion
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Start Verification', style: TextStyle(color: Colors.black)),
+              ),
+            ],
+          ),
+        );
+      case 2: // Step 2: USDC Balance & Give Allowance
+        return _buildOffRampStep2(qGray, qAccent);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildOffRampStep2(Color qGray, Color qAccent) {
+    final amountController = TextEditingController();
+    final tokenController = TextEditingController(text: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'); // USDC
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: qGray, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [Icon(Icons.check, color: qAccent), const SizedBox(width: 8), const Text('KYC Verified')]),
+          const SizedBox(height: 16),
+          const Text('Give Allowance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: qGray,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            color: Colors.black87,
+            child: const Column(
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green[900]!.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.arrow_downward, color: Color(0xFF00F0FF), size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '+0.025 BTC',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF00F0FF),
-                            ),
-                            softWrap: true,
-                          ),
-                          Text(
-                            '@ \$42,350.00',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              fontFamily: 'RobotoMono',
-                            ),
-                            softWrap: true,
-                          ),
-                        ],
-                      ),
-                    ),
+                    Text('Available Balance:', style: TextStyle(color: Colors.grey)),
+                    Text('1,245.89 USDC', style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'RobotoMono')),
                   ],
                 ),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Today, 10:42 AM',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        softWrap: true,
-                      ),
-                    ],
-                  ),
+                SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Network:', style: TextStyle(color: Colors.grey)),
+                    Text('CELO', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ],
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: amountController,
+            decoration: const InputDecoration(labelText: 'Amount (USDC)', border: OutlineInputBorder()),
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 12),
+          TextField(
+            controller: tokenController,
+            decoration: const InputDecoration(labelText: 'Token Address', border: OutlineInputBorder()),
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              onPressed: () async {
+                final amount = amountController.text;
+                final token = tokenController.text;
+                if (amount.isEmpty || token.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all fields')));
+                  return;
+                }
 
-          // Transaction 2: Sell
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: qGray,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.red[900]!.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.arrow_upward, color: Colors.red[400], size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '-0.0059 BTC',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.red[400],
-                            ),
-                            softWrap: true,
-                          ),
-                          Text(
-                            '@ \$42,372.88',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              fontFamily: 'RobotoMono',
-                            ),
-                            softWrap: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Yesterday, 4:15 PM',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        softWrap: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                final walletDetails = await _getWalletDetails();
+                if (walletDetails == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load wallet details')));
+                  return;
+                }
+
+                final key = walletDetails['privateKey']!;
+                try {
+                  final apiUrl = dotenv.env['ENS_API_URL'] ?? 'http://localhost:3000';
+                  final response = await http.post(
+                    Uri.parse('$apiUrl/give-allowance'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'key': key,
+                      'token': token,
+                      'amount': (double.parse(amount) * 1e6).toInt().toString(), // USDC has 6 decimals
+                    }),
+                  );
+
+                  final result = jsonDecode(response.body);
+                  if (response.statusCode == 200 && result['success']) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Allowance granted for $amount USDC')));
+                    setState(() => _offRampStep = 1); // Reset or move to next step
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Allowance failed')));
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              },
+              child: const Text('Continue'),
             ),
           ),
         ],
@@ -234,127 +252,150 @@ class _TransactionTabState extends State<TransactionTab> {
     );
   }
 
-  void _showTransferDialog(BuildContext context) {
-    final emailController = TextEditingController();
-    final amountController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Transfer'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+  Widget _buildOnRampFlow(Color qGray, Color qAccent) {
+    switch (_onRampStep) {
+      case 1: // Step 1: Become a Filler
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: qGray, borderRadius: BorderRadius.circular(16)),
+          child: Column(
             children: [
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Recipient Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.purple[900]!.withOpacity(0.3),
+                child: Icon(Icons.person_add, color: Colors.purple[400], size: 32),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount (USDC)',
-                  border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              const Text('Become a Liquidity Provider', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text(
+                'Earn money by providing liquidity for on-ramp transactions.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => setState(() => _onRampStep = 2),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                keyboardType: TextInputType.number,
+                child: const Text('Opt In As Filler', style: TextStyle(color: Colors.black)),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final email = emailController.text;
-                final amount = amountController.text;
-                if (email.isNotEmpty && amount.isNotEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Transferring $amount USDC to $email'),
-                    ),
-                  );
-                  Navigator.pop(context);
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill in all fields')),
-                  );
-                }
-              },
-              child: const Text('Send'),
-            ),
-          ],
         );
-      },
-    );
+      case 2: // Step 2: Open Order
+        return _buildOnRampStep2(qGray, qAccent);
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
-  void _showReceiveDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Receive'),
-          content: FutureBuilder<Map<String, String>?>(
-            future: _getWalletDetails(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return const Text('Error fetching wallet address');
-              } else if (!snapshot.hasData || snapshot.data == null) {
-                return const Text('No wallet address found. Please sign in.');
-              } else {
-                final walletAddress = snapshot.data!['address']!;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Share this address to receive USDC:',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 12),
-                    SelectableText(
-                      walletAddress,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'RobotoMono',
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                );
-              }
-            },
+  Widget _buildOnRampStep2(Color qGray, Color qAccent) {
+    final addressController = TextEditingController();
+    final amountController = TextEditingController();
+    final tokenController = TextEditingController(text: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48');
+    final bankTypeController = TextEditingController(text: '0');
+    final bankNumberController = TextEditingController();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: qGray, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Open Order', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: addressController,
+            decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            ElevatedButton(
+          const SizedBox(height: 12),
+          TextField(
+            controller: amountController,
+            decoration: const InputDecoration(labelText: 'Amount (USDC)', border: OutlineInputBorder()),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: tokenController,
+            decoration: const InputDecoration(labelText: 'Token Address', border: OutlineInputBorder()),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: bankTypeController,
+            decoration: const InputDecoration(labelText: 'Bank Type (0 for WISE)', border: OutlineInputBorder()),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: bankNumberController,
+            decoration: const InputDecoration(labelText: 'Bank Number', border: OutlineInputBorder()),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
               onPressed: () async {
+                final address = addressController.text;
+                final amount = amountController.text;
+                final token = tokenController.text;
+                final bankType = bankTypeController.text;
+                final bankNumber = bankNumberController.text;
+
+                if (address.isEmpty || amount.isEmpty || token.isEmpty || bankType.isEmpty || bankNumber.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill in all fields')));
+                  return;
+                }
+
                 final walletDetails = await _getWalletDetails();
-                if (walletDetails != null) {
-                  // Placeholder for copy-to-clipboard logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Address copied to clipboard')),
+                if (walletDetails == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to load wallet details')));
+                  return;
+                }
+
+                final key = walletDetails['privateKey']!;
+                final fillDeadline = (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 3600;
+                const orderDataType = '0x0000000000000000000000000000000000000000000000000000000000000000';
+
+                final orderData = {
+                  'token': token,
+                  'amount': (double.parse(amount) * 1e6).toInt().toString(),
+                  'bankType': int.parse(bankType),
+                  'bankNumber': bankNumber,
+                };
+
+                try {
+                  final apiUrl = dotenv.env['ENS_API_URL'] ?? 'http://localhost:3000';
+                  final response = await http.post(
+                    Uri.parse('$apiUrl/open-order'),
+                    headers: {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                      'key': key,
+                      'fillDeadline': fillDeadline,
+                      'orderDataType': orderDataType,
+                      'orderData': orderData,
+                    }),
                   );
-                  Navigator.pop(context);
+
+                  final result = jsonDecode(response.body);
+                  if (response.statusCode == 200 && result['success']) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order opened for $amount USDC')));
+                    setState(() => _onRampStep = 1); // Reset or move to next step
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order failed')));
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               },
-              child: const Text('Copy'),
+              child: const Text('Continue'),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }
