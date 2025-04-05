@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P On/Off Ramp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        qblack: '#0a0a0a',
+                        qwhite: '#f8f8f8',
+                        qgray: '#1a1a1a',
+                        qprimary: '#0055ff',
+                        qaccent: '#00f0ff',
+                        qsuccess: '#00e676',
+                        qwarning: '#ff9100',
+                        qerror: '#ff3b30'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            max-width: 430px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+            color: #f8f8f8;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0055ff 0%, #00f0ff 100%);
+        }
+        
+        .coin-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f8f8;
+            color: #0a0a0a;
+            font-weight: bold;
+        }
+        
+        .transaction-card {
+            transition: all 0.3s ease;
+            background-color: #1a1a1a;
+        }
+        
+        .transaction-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-item.active {
+            border-bottom: 2px solid #f8f8f8;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #1a1a1a;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0055ff;
+            cursor: pointer;
+        }
+        
+        .order-book {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .order-book::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .order-book::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+        
+        .order-book::-webkit-scrollbar-thumb {
+            background: #0055ff;
+            border-radius: 10px;
+        }
+        
+        .order-book::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+        
+        .buy-order {
+            background-color: rgba(0, 85, 255, 0.1);
+            border-left: 3px solid #0055ff;
+        }
+        
+        .sell-order {
+            background-color: rgba(255, 59, 48, 0.1);
+            border-left: 3px solid #ff3b30;
+        }
+        
+        .tab-button.active {
+            background-color: #0055ff;
+            color: #f8f8f8;
+            font-weight: 600;
+        }
+        
+        input, select {
+            background-color: #1a1a1a;
+            border-color: #333;
+            color: #f8f8f8;
+        }
+        
+        input::placeholder {
+            color: #666;
+        }
+        
+        .bg-gray-100 {
+            background-color: #1a1a1a;
+        }
+        
+        .text-gray-500 {
+            color: #888;
+        }
+        
+        .text-gray-400 {
+            color: #666;
+        }
+        
+        .text-gray-300 {
+            color: #555;
+        }
+        
+        .border-gray-200 {
+            border-color: #333;
+        }
+        
+        /* KYC Modal */
+        .kyc-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .kyc-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .kyc-container {
+            background-color: #1a1a1a;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 20px;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .kyc-modal.active .kyc-container {
+            transform: translateY(0);
+        }
+        
+        .kyc-step {
+            display: none;
+        }
+        
+        .kyc-step.active {
+            display: block;
+        }
+        
+        .kyc-progress {
+            height: 6px;
+            background-color: #333;
+            border-radius: 3px;
+            margin: 20px 0;
+        }
+        
+        .kyc-progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #0055ff, #00f0ff);
+            transition: width 0.3s ease;
+        }
+        
+        .document-upload {
+            border: 2px dashed #555;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .document-upload:hover {
+            border-color: #00f0ff;
+            background-color: rgba(0, 240, 255, 0.05);
+        }
+        
+        .document-preview {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .document-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+        }
+        
+        .verification-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(0, 230, 118, 0.1);
+            color: #00e676;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="bg-qblack text-qwhite">
+    <!-- Header -->
+    <header class="gradient-bg text-qwhite p-4 rounded-b-3xl shadow-lg">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="coin-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h1 class="text-xl font-bold font-mono">Q Wallet</h1>
+            </div>
+            <div class="flex space-x-4">
+                <button class="p-2 rounded-full bg-white bg-opacity-10">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="p-2 rounded-full bg-white bg-opacity-10">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-6 flex justify-between">
+            <div>
+                <p class="text-sm text-gray-300">Total Balance</p>
+                <h2 class="text-2xl font-bold font-mono">$1,245.89</h2>
+            </div>
+            <button class="self-end px-4 py-2 bg-qwhite text-qblack rounded-full text-sm font-medium">
+                <i class="fas fa-plus mr-1"></i> Deposit
+            </button>
+            <button class="self-end px-4 py-2 bg-qwhite text-qblack rounded-full text-sm font-medium">
+                <i class="fas fa-minus mr-1"></i> Withdraw
+            </button>
+        </div>
+        
+        <nav class="mt-6 flex justify-around border-b border-gray-700 pb-2">
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" data-tab="swap">Swap</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" data-tab="orders">Orders</a>
+            <a href="#" class="nav-item active text-qwhite font-medium pb-1" data-tab="ramp">ON/OFF Ramp</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" data-tab="history">History</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" data-tab="wallet">Wallet</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-4 pb-20">
+        <!-- KYC Verification Section -->
+        <div class="bg-qgray rounded-2xl shadow-md p-6 mb-6 text-center">
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 rounded-full bg-blue-900 bg-opacity-30 flex items-center justify-center">
+                    <i class="fas fa-id-card text-2xl text-qaccent"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Complete KYC Verification</h3>
+            <p class="text-gray-500 mb-4">To use our ON/OFF Ramp services, you need to complete identity verification (KYC).</p>
+            
+            <div class="flex items-center justify-center mb-6">
+                <div class="verification-badge">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>Level 1: Basic Info</span>
+                </div>
+                <div class="mx-2 text-gray-500">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="bg-qgray px-4 py-2 rounded-full border border-gray-700">
+                    <span class="text-gray-400">Level 2: ID Verification</span>
+                </div>
+            </div>
+            
+            <button id="start-kyc-btn" class="gradient-bg text-qblack w-full py-3 rounded-xl font-bold shadow-md">
+                Start Verification
+            </button>
+        </div>
+        
+        <!-- On-Ramp Options -->
+        <div class="bg-qgray rounded-2xl shadow-md p-4 mb-6">
+            <h3 class="font-bold text-lg mb-4">Deposit Methods</h3>
+            
+            <div class="space-y-3">
+                <!-- Bank Transfer -->
+                <div class="bg-qgray rounded-xl p-3 shadow-sm flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-green-900 bg-opacity-30 flex items-center justify-center mr-3">
+                        <i class="fas fa-university text-lg text-qaccent"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Bank Transfer</p>
+                        <p class="text-gray-500 text-sm">1-3 business days</p>
+                    </div>
+                    <div class="text-gray-500">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <!-- Credit Card -->
+                <div class="bg-qgray rounded-xl p-3 shadow-sm flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-purple-900 bg-opacity-30 flex items-center justify-center mr-3">
+                        <i class="fas fa-credit-card text-lg text-purple-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Credit/Debit Card</p>
+                        <p class="text-gray-500 text-sm">Instant</p>
+                    </div>
+                    <div class="text-gray-500">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <!-- Apple Pay -->
+                <div class="bg-qgray rounded-xl p-3 shadow-sm flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mr-3">
+                        <i class="fab fa-apple text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Apple Pay</p>
+                        <p class="text-gray-500 text-sm">Instant</p>
+                    </div>
+                    <div class="text-gray-500">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Off-Ramp Options -->
+        <div class="bg-qgray rounded-2xl shadow-md p-4 mb-6">
+            <h3 class="font-bold text-lg mb-4">Withdrawal Methods</h3>
+            
+            <div class="space-y-3">
+                <!-- PayPal -->
+                <div class="bg-qgray rounded-xl p-3 shadow-sm flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-blue-900 bg-opacity-30 flex items-center justify-center mr-3">
+                        <i class="fab fa-paypal text-lg text-blue-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">PayPal</p>
+                        <p class="text-gray-500 text-sm">1-24 hours</p>
+                    </div>
+                    <div class="text-gray-500">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <!-- Bank Transfer -->
+                <div class="bg-qgray rounded-xl p-3 shadow-sm flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-green-900 bg-opacity-30 flex items-center justify-center mr-3">
+                        <i class="fas fa-university text-lg text-qaccent"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Bank Transfer</p>
+                        <p class="text-gray-500 text-sm">1-3 business days</p>
+                    </div>
+                    <div class="text-gray-500">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                
+                <!-- Crypto Wallet -->
+                <div class="bg-qgray rounded-xl p-3 shadow-sm flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-yellow-900 bg-opacity-30 flex items-center justify-center mr-3">
+                        <i class="fas fa-wallet text-lg text-yellow-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium">Crypto Wallet</p>
+                        <p class="text-gray-500 text-sm">Instant</p>
+                    </div>
+                    <div class="text-gray-500">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Transactions -->
+        <h3 class="font-bold text-lg mb-3">Recent Transactions</h3>
+        <div class="space-y-3">
+            <!-- Transaction 1 -->
+            <div class="transaction-card bg-qgray rounded-xl p-3 shadow-sm flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="coin-icon mr-3 bg-green-900 bg-opacity-30 text-qaccent">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">Deposit</p>
+                        <p class="text-gray-500 text-sm font-mono">$500.00 via Bank Transfer</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium text-qaccent font-mono">+$500.00</p>
+                    <p class="text-gray-500 text-sm">Today, 10:42 AM</p>
+                </div>
+            </div>
+            
+            <!-- Transaction 2 -->
+            <div class="transaction-card bg-qgray rounded-xl p-3 shadow-sm flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="coin-icon mr-3 bg-red-900 bg-opacity-30 text-red-400">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">Withdrawal</p>
+                        <p class="text-gray-500 text-sm font-mono">0.05 BTC to Wallet</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium text-red-400 font-mono">-0.05 BTC</p>
+                    <p class="text-gray-500 text-sm">Yesterday, 4:15 PM</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- KYC Verification Modal -->
+    <div class="kyc-modal" id="kyc-modal">
+        <div class="kyc-container">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Identity Verification</h2>
+                <button id="close-kyc-btn" class="text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="kyc-progress">
+                <div class="kyc-progress-bar" id="kyc-progress" style="width: 25%"></div>
+            </div>
+            
+            <!-- Step 1: Personal Information -->
+            <div class="kyc-step active" id="step-1">
+                <h3 class="font-medium mb-4">1. Personal Information</h3>
+                
+                <div class="mb-3">
+                    <label class="block text-gray-500 text-sm mb-1">Full Name</label>
+                    <input type="text" placeholder="John Doe" class="w-full p-3 border border-gray-200 rounded-lg">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-gray-500 text-sm mb-1">Date of Birth</label>
+                    <input type="date" class="w-full p-3 border border-gray-200 rounded-lg">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-gray-500 text-sm mb-1">Country of Residence</label>
+                    <select class="w-full p-3 border border-gray-200 rounded-lg">
+                        <option>United States</option>
+                        <option>United Kingdom</option>
+                        <option>Canada</option>
+                        <option>Australia</option>
+                        <option>Germany</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-between mt-6">
+                    <button class="px-4 py-2 border border-gray-700 rounded-lg text-gray-400" disabled>
+                        Back
+                    </button>
+                    <button class="gradient-bg text-qblack px-4 py-2 rounded-lg font-medium next-step" data-step="2">
+                        Continue
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 2: ID Verification -->
+            <div class="kyc-step" id="step-2">
+                <h3 class="font-medium mb-4">2. ID Verification</h3>
+                <p class="text-gray-500 text-sm mb-4">Please upload a clear photo of your government-issued ID (Passport, Driver's License, or National ID)</p>
+                
+                <div class="document-upload" id="id-upload">
+                    <i class="fas fa-camera text-3xl text-gray-500 mb-2"></i>
+                    <p class="font-medium">Upload ID Document</p>
+                    <p class="text-gray-500 text-sm">Front side</p>
+                </div>
+                
+                <div class="document-preview" id="id-preview">
+                    <img id="id-preview-img" src="" alt="ID Preview">
+                    <button class="text-red-500 text-sm mt-2" id="remove-id">
+                        <i class="fas fa-trash mr-1"></i> Remove
+                    </button>
+                </div>
+                
+                <div class="flex justify-between mt-6">
+                    <button class="px-4 py-2 border border-gray-700 rounded-lg text-gray-400 prev-step" data-step="1">
+                        Back
+                    </button>
+                    <button class="gradient-bg text-qblack px-4 py-2 rounded-lg font-medium next-step" data-step="3">
+                        Continue
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Selfie Verification -->
+            <div class="kyc-step" id="step-3">
+                <h3 class="font-medium mb-4">3. Selfie Verification</h3>
+                <p class="text-gray-500 text-sm mb-4">Take a selfie to verify your identity. Make sure your face is clearly visible.</p>
+                
+                <div class="document-upload" id="selfie-upload">
+                    <i class="fas fa-user text-3xl text-gray-500 mb-2"></i>
+                    <p class="font-medium">Take a Selfie</p>
+                    <p class="text-gray-500 text-sm">Look straight at the camera</p>
+                </div>
+                
+                <div class="document-preview" id="selfie-preview">
+                    <img id="selfie-preview-img" src="" alt="Selfie Preview">
+                    <button class="text-red-500 text-sm mt-2" id="remove-selfie">
+                        <i class="fas fa-trash mr-1"></i> Remove
+                    </button>
+                </div>
+                
+                <div class="flex justify-between mt-6">
+                    <button class="px-4 py-2 border border-gray-700 rounded-lg text-gray-400 prev-step" data-step="2">
+                        Back
+                    </button>
+                    <button class="gradient-bg text-qblack px-4 py-2 rounded-lg font-medium next-step" data-step="4">
+                        Continue
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 4: Review and Submit -->
+            <div class="kyc-step" id="step-4">
+                <h3 class="font-medium mb-4">4. Review and Submit</h3>
+                <p class="text-gray-500 text-sm mb-6">Please review your information before submitting for verification.</p>
+                
+                <div class="bg-qgray rounded-xl p-4 mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-500">Full Name:</span>
+                        <span class="font-medium" id="review-name">John Doe</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-500">Date of Birth:</span>
+                        <span class="font-medium" id="review-dob">01/01/1990</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Country:</span>
+                        <span class="font-medium" id="review-country">United States</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center mb-6">
+                    <input type="checkbox" id="kyc-consent" class="mr-2">
+                    <label for="kyc-consent" class="text-sm text-gray-400">
+                        I consent to the processing of my personal data for identity verification purposes.
+                    </label>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button class="px-4 py-2 border border-gray-700 rounded-lg text-gray-400 prev-step" data-step="3">
+                        Back
+                    </button>
+                    <button id="submit-kyc-btn" class="gradient-bg text-qblack px-4 py-2 rounded-lg font-medium">
+                        Submit Verification
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Step 5: Verification Submitted -->
+            <div class="kyc-step text-center" id="step-5">
+                <div class="flex justify-center mb-6">
+                    <div class="w-20 h-20 rounded-full bg-green-900 bg-opacity-30 flex items-center justify-center">
+                        <i class="fas fa-check text-3xl text-qsuccess"></i>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl font-bold mb-2">Verification Submitted</h3>
+                <p class="text-gray-500 mb-6">Your documents have been submitted for review. We'll notify you once your verification is complete. This usually takes 1-3 business days.</p>
+                
+                <button id="finish-kyc-btn" class="gradient-bg text-qblack w-full py-3 rounded-xl font-bold shadow-md">
+                    Finish
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-qgray border-t border-gray-800 flex justify-around p-3 rounded-t-2xl max-w-md mx-auto">
+        <a href="#" class="flex flex-col items-center text-gray-500">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-500">
+            <i class="fas fa-exchange-alt text-xl"></i>
+            <span class="text-xs mt-1">Swap</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-qaccent">
+            <i class="fas fa-exchange-alt text-xl"></i>
+            <span class="text-xs mt-1">ON/OFF Ramp</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-500">
+            <i class="fas fa-wallet text-xl"></i>
+            <span class="text-xs mt-1">Wallet</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-500">
+            <i class="fas fa-history text-xl"></i>
+            <span class="text-xs mt-1">History</span>
+        </a>
+    </nav>
+
+    <!-- Quick Action Modal -->
+    <div class="fixed bottom-20 right-4">
+        <button class="bg-qprimary text-white p-4 rounded-full shadow-xl">
+            <i class="fas fa-qrcode text-xl"></i>
+        </button>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Navigation tabs
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', function() {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                navItems.forEach(nav => nav.classList.add('text-gray-400'));
+                this.classList.add('active');
+                this.classList.remove('text-gray-400');
+            });
+        });
+        
+        // KYC Modal
+        const kycModal = document.getElementById('kyc-modal');
+        const startKycBtn = document.getElementById('start-kyc-btn');
+        const closeKycBtn = document.getElementById('close-kyc-btn');
+        const finishKycBtn = document.getElementById('finish-kyc-btn');
+        const kycProgress = document.getElementById('kyc-progress');
+        const kycSteps = document.querySelectorAll('.kyc-step');
+        const nextStepBtns = document.querySelectorAll('.next-step');
+        const prevStepBtns = document.querySelectorAll('.prev-step');
+        const submitKycBtn = document.getElementById('submit-kyc-btn');
+        
+        // Open KYC modal
+        startKycBtn.addEventListener('click', function() {
+            kycModal.classList.add('active');
+        });
+        
+        // Close KYC modal
+        closeKycBtn.addEventListener('click', function() {
+            kycModal.classList.remove('active');
+        });
+        
+        // Finish KYC process
+        finishKycBtn.addEventListener('click', function() {
+            kycModal.classList.remove('active');
+            // Update UI to show KYC is completed
+            startKycBtn.textContent = 'Verification Submitted';
+            startKycBtn.classList.remove('gradient-bg');
+            startKycBtn.classList.add('bg-gray-700');
+            startKycBtn.disabled = true;
+        });
+        
+        // Next step in KYC process
+        nextStepBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const nextStep = this.getAttribute('data-step');
+                showStep(nextStep);
+                updateProgress(nextStep);
+            });
+        });
+        
+        // Previous step in KYC process
+        prevStepBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const prevStep = this.getAttribute('data-step');
+                showStep(prevStep);
+                updateProgress(prevStep);
+            });
+        });
+        
+        // Submit KYC
+        submitKycBtn.addEventListener('click', function() {
+            showStep('5');
+            updateProgress('5');
+        });
+        
+        // Show specific step
+        function showStep(stepNumber) {
+            kycSteps.forEach(step => {
+                step.classList.remove('active');
+                if (step.id === `step-${stepNumber}`) {
+                    step.classList.add('active');
+                }
+            });
+        }
+        
+        // Update progress bar
+        function updateProgress(stepNumber) {
+            const progress = (parseInt(stepNumber) / 5) * 100;
+            kycProgress.style.width = `${progress}%`;
+        }
+        
+        // Document upload simulation
+        const idUpload = document.getElementById('id-upload');
+        const idPreview = document.getElementById('id-preview');
+        const idPreviewImg = document.getElementById('id-preview-img');
+        const removeIdBtn = document.getElementById('remove-id');
+        
+        const selfieUpload = document.getElementById('selfie-upload');
+        const selfiePreview = document.getElementById('selfie-preview');
+        const selfiePreviewImg = document.getElementById('selfie-preview-img');
+        const removeSelfieBtn = document.getElementById('remove-selfie');
+        
+        idUpload.addEventListener('click', function() {
+            // In a real app, this would open the camera or file picker
+            // For demo purposes, we'll just simulate an upload
+            idPreviewImg.src = 'https://via.placeholder.com/300x200?text=ID+Document';
+            idUpload.style.display = 'none';
+            idPreview.style.display = 'block';
+        });
+        
+        removeIdBtn.addEventListener('click', function() {
+            idPreviewImg.src = '';
+            idPreview.style.display = 'none';
+            idUpload.style.display = 'block';
+        });
+        
+        selfieUpload.addEventListener('click', function() {
+            // In a real app, this would open the camera
+            // For demo purposes, we'll just simulate a selfie
+            selfiePreviewImg.src = 'https://via.placeholder.com/300x300?text=Selfie';
+            selfieUpload.style.display = 'none';
+            selfiePreview.style.display = 'block';
+        });
+        
+        removeSelfieBtn.addEventListener('click', function() {
+            selfiePreviewImg.src = '';
+            selfiePreview.style.display = 'none';
+            selfieUpload.style.display = 'block';
+        });
+        
+        // Update review information
+        const nameInput = document.querySelector('#step-1 input[type="text"]');
+        const dobInput = document.querySelector('#step-1 input[type="date"]');
+        const countryInput = document.querySelector('#step-1 select');
+        const reviewName = document.getElementById('review-name');
+        const reviewDob = document.getElementById('review-dob');
+        const reviewCountry = document.getElementById('review-country');
+        
+        nameInput.addEventListener('input', function() {
+            reviewName.textContent = this.value || 'John Doe';
+        });
+        
+        dobInput.addEventListener('change', function() {
+            if (this.value) {
+                const date = new Date(this.value);
+                reviewDob.textContent = date.toLocaleDateString();
+            } else {
+                reviewDob.textContent = '01/01/1990';
+            }
+        });
+        
+        countryInput.addEventListener('change', function() {
+            reviewCountry.textContent = this.value || 'United States';
+        });
+    </script>
+</body>
+</html>

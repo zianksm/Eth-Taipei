@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P On/Off Ramp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        qblack: '#0a0a0a',
+                        qwhite: '#f8f8f8',
+                        qgray: '#1a1a1a',
+                        qprimary: '#0055ff',
+                        qaccent: '#00f0ff',
+                        qethereum: '#627EEA',
+                        qbitcoin: '#F7931A',
+                        qsolana: '#00FFA3',
+                        qpolygon: '#8247E5',
+                        qavalanche: '#E84142',
+                        qbnb: '#F0B90B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            max-width: 430px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+            color: #f8f8f8;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0055ff 0%, #00f0ff 100%);
+        }
+        
+        .coin-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f8f8;
+            color: #0a0a0a;
+            font-weight: bold;
+        }
+        
+        .transaction-card {
+            transition: all 0.3s ease;
+            background-color: #1a1a1a;
+        }
+        
+        .transaction-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-item.active {
+            border-bottom: 2px solid #f8f8f8;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #1a1a1a;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0055ff;
+            cursor: pointer;
+        }
+        
+        .order-book {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .order-book::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .order-book::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+        
+        .order-book::-webkit-scrollbar-thumb {
+            background: #0055ff;
+            border-radius: 10px;
+        }
+        
+        .order-book::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+        
+        .buy-order {
+            background-color: rgba(0, 85, 255, 0.1);
+            border-left: 3px solid #0055ff;
+        }
+        
+        .sell-order {
+            background-color: rgba(255, 59, 48, 0.1);
+            border-left: 3px solid #ff3b30;
+        }
+        
+        .tab-button.active {
+            background-color: #0055ff;
+            color: #f8f8f8;
+            font-weight: 600;
+        }
+        
+        input, select {
+            background-color: #1a1a1a;
+            border-color: #333;
+            color: #f8f8f8;
+        }
+        
+        input::placeholder {
+            color: #666;
+        }
+        
+        .bg-gray-100 {
+            background-color: #1a1a1a;
+        }
+        
+        .text-gray-500 {
+            color: #888;
+        }
+        
+        .text-gray-400 {
+            color: #666;
+        }
+        
+        .text-gray-300 {
+            color: #555;
+        }
+        
+        .border-gray-200 {
+            border-color: #333;
+        }
+        
+        /* Wallet specific styles */
+        .wallet-page {
+            display: none;
+        }
+        
+        .chain-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+        
+        .chain-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .asset-row {
+            transition: all 0.2s ease;
+        }
+        
+        .asset-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .qr-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-content {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .network-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body class="bg-qblack text-qwhite">
+    <!-- Header -->
+    <header class="gradient-bg text-qwhite p-4 rounded-b-3xl shadow-lg">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="coin-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h1 class="text-xl font-bold font-mono">Q Wallet</h1>
+            </div>
+            <div class="flex space-x-4">
+                <button class="p-2 rounded-full bg-white bg-opacity-10">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="p-2 rounded-full bg-white bg-opacity-10">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-6 flex justify-between">
+            <div>
+                <p class="text-sm text-gray-300">Total Balance</p>
+                <h2 class="text-2xl font-bold font-mono">$1,245.89</h2>
+            </div>
+            <button class="self-end px-4 py-2 bg-qwhite text-qblack rounded-full text-sm font-medium">
+                <i class="fas fa-plus mr-1"></i> Deposit
+            </button>
+            <button class="self-end px-4 py-2 bg-qwhite text-qblack rounded-full text-sm font-medium">
+                <i class="fas fa-plus mr-1"></i> Withdraw
+            </button>
+        </div>
+        
+        <nav class="mt-6 flex justify-around border-b border-gray-700 pb-2">
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" onclick="showPage('swap')">Swap</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" onclick="showPage('orders')">Orders</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" onclick="showPage('ramp')">ON/OFF Ramp</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" onclick="showPage('history')">History</a>
+            <a href="#" class="nav-item text-gray-400 font-medium pb-1" onclick="showPage('wallet')">Wallet</a>
+        </nav>
+    </header>
+
+    <!-- Swap Page (Default) -->
+    <div id="swap-page" class="p-4 pb-20">
+        <!-- Order Book Tabs -->
+        <div class="flex bg-qgray rounded-xl p-1 mb-4">
+            <button class="tab-button active flex-1 py-2 rounded-lg text-center">Order Book</button>
+            <button class="tab-button flex-1 py-2 rounded-lg text-center">My Orders</button>
+        </div>
+        
+        <!-- Order Book -->
+        <div class="bg-qgray rounded-2xl shadow-md p-4 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg font-mono">BTC/USDT</h3>
+                <div class="flex space-x-2">
+                    <button class="text-gray-500">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button class="text-gray-500">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Order Book Header -->
+            <div class="grid grid-cols-3 text-gray-500 text-sm font-medium mb-2">
+                <span>Price (USDT)</span>
+                <span class="text-center">Amount (BTC)</span>
+                <span class="text-right">Total</span>
+            </div>
+            
+            <!-- Order Book Content -->
+            <div class="order-book space-y-1 mb-4">
+                <!-- Sell Orders (Asks) -->
+                <div class="sell-order p-2 rounded flex justify-between items-center">
+                    <span class="text-red-400 font-medium font-mono">42,400.00</span>
+                    <span class="text-center font-mono">0.125</span>
+                    <span class="text-right font-mono">5,300.00</span>
+                </div>
+                <div class="sell-order p-2 rounded flex justify-between items-center">
+                    <span class="text-red-400 font-medium font-mono">42,380.50</span>
+                    <span class="text-center font-mono">0.085</span>
+                    <span class="text-right font-mono">3,602.33</span>
+                </div>
+                <div class="sell-order p-2 rounded flex justify-between items-center">
+                    <span class="text-red-400 font-medium font-mono">42,375.25</span>
+                    <span class="text-center font-mono">0.210</span>
+                    <span class="text-right font-mono">8,898.80</span>
+                </div>
+                
+                <!-- Market Price -->
+                <div class="text-center my-2">
+                    <span class="bg-qgray px-3 py-1 rounded-full text-sm font-bold font-mono">42,356.80</span>
+                </div>
+                
+                <!-- Buy Orders (Bids) -->
+                <div class="buy-order p-2 rounded flex justify-between items-center">
+                    <span class="text-qaccent font-medium font-mono">42,350.00</span>
+                    <span class="text-center font-mono">0.175</span>
+                    <span class="text-right font-mono">7,411.25</span>
+                </div>
+                <div class="buy-order p-2 rounded flex justify-between items-center">
+                    <span class="text-qaccent font-medium font-mono">42,345.75</span>
+                    <span class="text-center font-mono">0.095</span>
+                    <span class="text-right font-mono">4,022.85</span>
+                </div>
+                <div class="buy-order p-2 rounded flex justify-between items-center">
+                    <span class="text-qaccent font-medium font-mono">42,340.00</span>
+                    <span class="text-center font-mono">0.320</span>
+                    <span class="text-right font-mono">13,548.80</span>
+                </div>
+                <div class="buy-order p-2 rounded flex justify-between items-center">
+                    <span class="text-qaccent font-medium font-mono">42,335.50</span>
+                    <span class="text-center font-mono">0.150</span>
+                    <span class="text-right font-mono">6,350.33</span>
+                </div>
+            </div>
+            
+            <!-- Create Order Form -->
+            <div class="mt-4">
+                <div class="flex space-x-2 mb-3">
+                    <button class="flex-1 bg-green-900 bg-opacity-30 text-qaccent py-2 rounded-lg font-medium">Buy</button>
+                    <button class="flex-1 bg-red-900 bg-opacity-30 text-red-400 py-2 rounded-lg font-medium">Sell</button>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-gray-500 text-sm mb-1">Price (USDT)</label>
+                    <input type="number" placeholder="42,356.80" class="w-full p-3 border border-gray-200 rounded-lg font-mono">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-gray-500 text-sm mb-1">Amount (BTC)</label>
+                    <input type="number" placeholder="0.00" class="w-full p-3 border border-gray-200 rounded-lg font-mono">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-500 text-sm mb-1">Total (USDT)</label>
+                    <input type="number" placeholder="0.00" class="w-full p-3 border border-gray-200 rounded-lg font-mono">
+                </div>
+                
+                <button class="gradient-bg text-qblack w-full py-3 rounded-xl font-bold shadow-md">
+                    Place Order
+                </button>
+            </div>
+        </div>
+        
+        <!-- PayPal Off-Ramp -->
+        <div class="bg-qgray rounded-2xl shadow-md p-4 mb-6">
+            <div class="flex items-center mb-3">
+                <div class="coin-icon mr-3 bg-blue-500 text-white">
+                    <i class="fab fa-paypal"></i>
+                </div>
+                <h3 class="font-bold text-lg">Cash Out to PayPal</h3>
+            </div>
+            
+            <p class="text-gray-500 text-sm mb-4">Convert your crypto to USD and withdraw directly to your PayPal account</p>
+            
+            <div class="mb-3">
+                <label class="block text-gray-500 text-sm mb-1">From</label>
+                <select class="w-full p-3 border border-gray-200 rounded-lg">
+                    <option>BTC</option>
+                    <option>ETH</option>
+                    <option>USDT</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="block text-gray-500 text-sm mb-1">Amount</label>
+                <input type="number" placeholder="0.00" class="w-full p-3 border border-gray-200 rounded-lg font-mono">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-500 text-sm mb-1">PayPal Email</label>
+                <input type="email" placeholder="your@email.com" class="w-full p-3 border border-gray-200 rounded-lg">
+            </div>
+            
+            <button class="bg-blue-600 text-white w-full py-3 rounded-xl font-bold shadow-md">
+                Withdraw to PayPal
+            </button>
+        </div>
+        
+        <!-- Recent Transactions -->
+        <h3 class="font-bold text-lg mb-3">Recent Transactions</h3>
+        <div class="space-y-3">
+            <!-- Transaction 1 -->
+            <div class="transaction-card bg-qgray rounded-xl p-3 shadow-sm flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="coin-icon mr-3 bg-green-900 bg-opacity-30 text-qaccent">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">Buy Order Filled</p>
+                        <p class="text-gray-500 text-sm font-mono">0.025 BTC @ $42,350.00</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium text-qaccent font-mono">+0.025 BTC</p>
+                    <p class="text-gray-500 text-sm">Today, 10:42 AM</p>
+                </div>
+            </div>
+            
+            <!-- Transaction 2 -->
+            <div class="transaction-card bg-qgray rounded-xl p-3 shadow-sm flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="coin-icon mr-3 bg-red-900 bg-opacity-30 text-red-400">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">Sell Order Filled</p>
+                        <p class="text-gray-500 text-sm font-mono">0.0059 BTC @ $42,372.88</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium text-red-400 font-mono">-0.0059 BTC</p>
+                    <p class="text-gray-500 text-sm">Yesterday, 4:15 PM</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Page -->
+    <div id="wallet-page" class="wallet-page p-4 pb-20">
+        <!-- Wallet Overview -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Multi-Chain Wallet</h2>
+                <button onclick="showQRModal()" class="p-2 rounded-full bg-qprimary bg-opacity-20 text-qprimary">
+                    <i class="fas fa-qrcode"></i>
+                </button>
+            </div>
+            
+            <div class="bg-qgray rounded-2xl p-4 mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Total Portfolio Value</span>
+                    <span class="text-sm text-gray-400">USD</span>
+                </div>
+                <h3 class="text-2xl font-bold font-mono">$1,245.89</h3>
+                <div class="flex justify-between mt-2">
+                    <span class="text-sm text-green-500">+2.4%</span>
+                    <span class="text-sm text-gray-500">24h change</span>
+                </div>
+            </div>
+            
+            <!-- Chain Selector -->
+            <div class="flex space-x-2 mb-4 overflow-x-auto pb-2">
+                <button class="chain-filter active px-4 py-2 rounded-full bg-qprimary text-white text-sm font-medium">All</button>
+                <button class="chain-filter px-4 py-2 rounded-full bg-qgray text-gray-400 text-sm font-medium" style="border-left-color: #F7931A;">Bitcoin</button>
+                <button class="chain-filter px-4 py-2 rounded-full bg-qgray text-gray-400 text-sm font-medium" style="border-left-color: #627EEA;">Ethereum</button>
+                <button class="chain-filter px-4 py-2 rounded-full bg-qgray text-gray-400 text-sm font-medium" style="border-left-color: #00FFA3;">Solana</button>
+                <button class="chain-filter px-4 py-2 rounded-full bg-qgray text-gray-400 text-sm font-medium" style="border-left-color: #8247E5;">Polygon</button>
+            </div>
+        </div>
+        
+        <!-- Chain Balances -->
+        <div class="space-y-4">
+            <!-- Ethereum Chain -->
+            <div class="chain-card bg-qgray rounded-xl p-4" style="border-left-color: #627EEA;">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-qethereum bg-opacity-20 flex items-center justify-center mr-2">
+                            <i class="fab fa-ethereum text-qethereum"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium">Ethereum</h3>
+                            <div class="flex items-center">
+                                <span class="network-indicator bg-qethereum"></span>
+                                <span class="text-xs text-gray-500">Mainnet</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold font-mono">$842.76</p>
+                        <p class="text-xs text-gray-500">0.0421 ETH</p>
+                    </div>
+                </div>
+                
+                <!-- Assets on Ethereum -->
+                <div class="mt-3 space-y-2">
+                    <div class="asset-row flex justify-between items-center p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-900 bg-opacity-20 flex items-center justify-center mr-2">
+                                <i class="fab fa-ethereum text-blue-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">ETH</p>
+                                <p class="text-xs text-gray-500">Ehereum</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono">$842.76</p>
+                            <p class="text-xs text-gray-500">0.0421</p>
+                        </div>
+                    </div>
+                    
+                    <div class="asset-row flex justify-between items-center p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-purple-900 bg-opacity-20 flex items-center justify-center mr-2">
+                                <span class="text-purple-400 font-bold text-xs">USDT</span>
+                            </div>
+                            <div>
+                                <p class="font-medium">USDT</p>
+                                <p class="text-xs text-gray-500">Tether</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono">$200.00</p>
+                            <p class="text-xs text-gray-500">200.00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="asset-row flex justify-between items-center p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-red-900 bg-opacity-20 flex items-center justify-center mr-2">
+                                <span class="text-red-400 font-bold text-xs">UNI</span>
+                            </div>
+                            <div>
+                                <p class="font-medium">UNI</p>
+                                <p class="text-xs text-gray-500">Uniswap</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono">$203.10</p>
+                            <p class="text-xs text-gray-500">15.2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bitcoin Chain -->
+            <div class="chain-card bg-qgray rounded-xl p-4" style="border-left-color: #F7931A;">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-qbitcoin bg-opacity-20 flex items-center justify-center mr-2">
+                            <i class="fab fa-bitcoin text-qbitcoin"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium">Bitcoin</h3>
+                            <div class="flex items-center">
+                                <span class="network-indicator bg-qbitcoin"></span>
+                                <span class="text-xs text-gray-500">Mainnet</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold font-mono">$253.42</p>
+                        <p class="text-xs text-gray-500">0.0058 BTC</p>
+                    </div>
+                </div>
+                
+                <!-- Assets on Bitcoin -->
+                <div class="mt-3 space-y-2">
+                    <div class="asset-row flex justify-between items-center p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-orange-900 bg-opacity-20 flex items-center justify-center mr-2">
+                                <i class="fab fa-bitcoin text-orange-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">BTC</p>
+                                <p class="text-xs text-gray-500">Bitcoin</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono">$253.42</p>
+                            <p class="text-xs text-gray-500">0.0058</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Solana Chain -->
+            <div class="chain-card bg-qgray rounded-xl p-4" style="border-left-color: #00FFA3;">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-qsolana bg-opacity-20 flex items-center justify-center mr-2">
+                            <i class="fas fa-bolt text-qsolana"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium">Solana</h3>
+                            <div class="flex items-center">
+                                <span class="network-indicator bg-qsolana"></span>
+                                <span class="text-xs text-gray-500">Mainnet</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold font-mono">$149.71</p>
+                        <p class="text-xs text-gray-500">1.42 SOL</p>
+                    </div>
+                </div>
+                
+                <!-- Assets on Solana -->
+                <div class="mt-3 space-y-2">
+                    <div class="asset-row flex justify-between items-center p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-green-900 bg-opacity-20 flex items-center justify-center mr-2">
+                                <i class="fas fa-bolt text-green-400"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium">SOL</p>
+                                <p class="text-xs text-gray-500">Solana</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-mono">$149.71</p>
+                            <p class="text-xs text-gray-500">1.42</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="fixed bottom-20 right-4 flex flex-col space-y-2">
+            <button class="bg-qprimary text-white p-3 rounded-full shadow-xl" onclick="showQRModal()">
+                <i class="fas fa-qrcode text-xl"></i>
+            </button>
+            <button class="bg-green-600 text-white p-3 rounded-full shadow-xl">
+                <i class="fas fa-plus text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="qr-modal">
+        <div class="qr-content">
+            <h3 class="font-bold text-lg mb-3">Wallet Address</h3>
+            <div class="bg-white p-4 rounded mb-3 flex justify-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=0x71C7656EC7ab88b098defB751B7401B5f6d8976F" alt="QR Code" class="w-40 h-40">
+            </div>
+            <p class="text-sm font-mono mb-4">0x71C7656EC7ab88b098defB751B7401B5f6d8976F</p>
+            <div class="flex space-x-2">
+                <button class="flex-1 bg-gray-700 text-white py-2 rounded-lg" onclick="hideQRModal()">Close</button>
+                <button class="flex-1 bg-qprimary text-white py-2 rounded-lg" onclick="copyAddress()">
+                    <i class="fas fa-copy mr-1"></i> Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-qgray border-t border-gray-800 flex justify-around p-3 rounded-t-2xl max-w-md mx-auto">
+        <a href="#" class="flex flex-col items-center text-gray-500" onclick="showPage('swap')">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-500" onclick="showPage('swap')">
+            <i class="fas fa-exchange-alt text-xl"></i>
+            <span class="text-xs mt-1">Swap</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-500" onclick="showPage('ramp')">
+            <i class="fas fa-exchange-alt text-xl"></i>
+            <span class="text-xs mt-1">ON/OFF Ramp</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-qaccent" onclick="showPage('wallet')">
+            <i class="fas fa-wallet text-xl"></i>
+            <span class="text-xs mt-1">Wallet</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-500" onclick="showPage('history')">
+            <i class="fas fa-history text-xl"></i>
+            <span class="text-xs mt-1">History</span>
+        </a>
+    </nav>
+
+    <script>
+        // Page navigation
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('[id$="-page"]').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Show selected page
+            document.getElementById(`${page}-page`).style.display = 'block';
+            
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('text-gray-400');
+            });
+            
+            // Set active nav item
+            const navItem = document.querySelector(`.nav-item:nth-child(${
+                page === 'swap' ? 1 : 
+                page === 'orders' ? 2 : 
+                page === 'ramp' ? 3 : 
+                page === 'history' ? 4 : 5
+            })`);
+            
+            if (navItem) {
+                navItem.classList.add('active');
+                navItem.classList.remove('text-gray-400');
+            }
+            
+            // Update bottom nav active state
+            document.querySelectorAll('nav a').forEach(el => {
+                el.classList.remove('text-qaccent');
+                el.classList.add('text-gray-500');
+            });
+            
+            // Set active bottom nav item
+            const bottomNavItem = document.querySelector(`nav a:nth-child(${
+                page === 'swap' ? 2 : 
+                page === 'ramp' ? 3 : 
+                page === 'wallet' ? 4 : 
+                page === 'history' ? 5 : 1
+            })`);
+            
+            if (bottomNavItem) {
+                bottomNavItem.classList.add('text-qaccent');
+                bottomNavItem.classList.remove('text-gray-500');
+            }
+        }
+        
+        // Initialize to show swap page
+        showPage('swap');
+        
+        // QR Modal functions
+        function showQRModal() {
+            document.getElementById('qr-modal').style.display = 'flex';
+        }
+        
+        function hideQRModal() {
+            document.getElementById('qr-modal').style.display = 'none';
+        }
+        
+        function copyAddress() {
+            navigator.clipboard.writeText('0x71C7656EC7ab88b098defB751B7401B5f6d8976F');
+            alert('Address copied to clipboard!');
+        }
+        
+        // Chain filter
+        document.querySelectorAll('.chain-filter').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.chain-filter').forEach(btn => {
+                    btn.classList.remove('active', 'bg-qprimary', 'text-white');
+                    btn.classList.add('bg-qgray', 'text-gray-400');
+                });
+                
+                this.classList.add('active', 'bg-qprimary', 'text-white');
+                this.classList.remove('bg-qgray', 'text-gray-400');
+                
+                // Here you would filter the chains based on selection
+                // For this demo, we're just changing the UI
+            });
+        });
+        
+        // Tab switching
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Calculate total when price or amount changes
+        const priceInput = document.querySelector('input[placeholder="42,356.80"]');
+        const amountInput = document.querySelector('input[placeholder="0.00"]');
+        const totalInput = document.querySelector('input[placeholder="0.00"]');
+        
+        function calculateTotal() {
+            const price = parseFloat(priceInput.value.replace(',', '')) || 0;
+            const amount = parseFloat(amountInput.value) || 0;
+            totalInput.value = (price * amount).toFixed(2);
+        }
+        
+        if (priceInput && amountInput && totalInput) {
+            priceInput.addEventListener('input', calculateTotal);
+            amountInput.addEventListener('input', calculateTotal);
+            
+            // Format price input
+            priceInput.addEventListener('blur', function() {
+                const value = parseFloat(this.value.replace(',', ''));
+                if (!isNaN(value)) {
+                    this.value = value.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
+            });
+        }
+        
+        // PayPal withdrawal validation
+        const paypalButton = document.querySelector('.bg-blue-600');
+        if (paypalButton) {
+            paypalButton.addEventListener('click', function() {
+                const amount = parseFloat(document.querySelector('input[placeholder="0.00"]').value);
+                const email = document.querySelector('input[type="email"]').value;
+                
+                if (!amount || amount <= 0) {
+                    alert('Please enter a valid amount');
+                    return;
+                }
+                
+                if (!email || !email.includes('@')) {
+                    alert('Please enter a valid PayPal email');
+                    return;
+                }
+                
+                alert(`Withdrawal request for $${amount.toFixed(2)} to ${email} has been submitted`);
+            });
+        }
+    </script>
+</body>
+</html>
