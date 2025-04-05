@@ -7,3 +7,6 @@
 [submodule "contracts/lib/intents-framework"]
 	path = contracts/lib/intents-framework
 	url = https://github.com/BootNodeDev/intents-framework
+[submodule "contracts/lib/self"]
+	path = contracts/lib/self
+	url = https://github.com/selfxyz/self
