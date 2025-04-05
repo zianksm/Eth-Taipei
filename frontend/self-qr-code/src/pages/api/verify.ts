@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             console.log("Public signals:", publicSignals);
 
             // Contract details
-            const contractAddress = "0x04241142aa5B0692AD767f1df6942f751FE30C00";
+            const contractAddress = "0xC9741C144fa9A44641222c706ea321b8B6a704E8";
 
             // Uncomment this to use the Self backend verifier for offchain verification instead
             // const selfdVerifier = new SelfBackendVerifier(

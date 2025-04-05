@@ -25,7 +25,7 @@ contract DeploySanctionScreeningCheck is Script {
         uint256 olderThan = 18;
         bool forbiddenCountriesEnabled = false;
         uint256[4] memory forbiddenCountriesListPacked = [uint256(0), uint256(0), uint256(0), uint256(0)];
-        bool[3] memory ofacEnabled = [false, false, false];
+        bool[3] memory ofacEnabled = [true, false, false];
 
         // Deploy SanctionScreeningCheck
         SanctionScreeningCheck sanctionScreeningCheck = new SanctionScreeningCheck(

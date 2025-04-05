@@ -37,6 +37,10 @@ contract SanctionScreeningCheck is SelfVerificationRoot {
         )
     {}
 
+    function isWhitelisted(address user) public view returns (bool) {
+        return whitelistedUsers[user];
+    }
+
     function whitelistUser(IVcAndDiscloseCircuitVerifier.VcAndDiscloseProof memory proof) public {
         // Check OFAC sanctioned
         verifySelfProof(proof);
