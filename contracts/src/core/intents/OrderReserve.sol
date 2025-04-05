@@ -12,7 +12,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
 
     mapping(address => uint256) public nonce;
 
-    function newNonce(address who) internal returns(uint256) {
+    function newNonce(address who) internal returns (uint256) {
         return ++nonce[who];
     }
 
@@ -24,10 +24,9 @@ abstract contract ReserveHandler is Base7683, TokenAction {
     // you just need to deposit this amount everytime you want to fill and reserve an order,
     uint256 public constant UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT = 0.0001 ether;
 
-    function reserve(OnchainCrossChainOrder memory order, address who) external payable {
-        bytes32 id = _getOrderId(order);
+    function reserve(bytes32 id) external payable {
         _ensureNotReserved(id);
-        _reserve(id, who);
+        _reserve(id, msg.sender);
     }
 
     /// @dev can only be called by verifier contract after verifying the proof
@@ -52,11 +51,12 @@ abstract contract ReserveHandler is Base7683, TokenAction {
     function _createOrder(bytes32 id, address token, uint256 amount) internal {
         IIntent.OrderReserves storage reserves = orderReserves[id];
         reserves.amount += amount;
+        reserves.token = token;
     }
 
     function _ensureNotReserved(bytes32 id) internal {
         // TODO  custom errors
-        require(orderReserves[id].inner.filler == address(0));
+        require(orderReserves[id].inner.filler == address(0), "order is reserved");
     }
 
     function _reserve(bytes32 id, address who) internal returns (uint256 amountNeedToFill) {
@@ -70,7 +70,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
         reserveInfo.amount += amount;
         reserveInfo.filler = who;
 
-        require(msg.value == UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT);
+        require(msg.value == UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT, "no deposit found");
         reserveInfo.deposit += UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT;
     }
 
