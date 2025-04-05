@@ -14,7 +14,11 @@ import {MailboxClient} from "@hyperlane-xyz/client/MailboxClient.sol";
 import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
 
 contract WebProofVerifier is Verifier, MailboxClient {
-    mapping(bytes32 => IIntent.OrderData) public orders;
+    mapping(uint32 => mapping(bytes32 => IIntent.OrderData)) public orders;
+
+    mapping(bytes32 => uint32) public orderToHub;
+
+    mapping(uint32 => address) public chainToHub;
 
     // acts as like a nonce to the proof, prevent a proof to be used multiple times for different ids
     mapping(bytes32 => bool) public usedTransferIds;
@@ -31,12 +35,8 @@ contract WebProofVerifier is Verifier, MailboxClient {
 
     // we can technically makes this works with multiple different hub address
     // but skip it for now
-    function setHub(address hub) external {
-        _hub = hub;
-    }
-
-    function setHubChain(uint32 chain) external {
-        _hubChain = chain;
+    function setHub(uint32 chain, address hub) external {
+        chainToHub[chain] = hub;
     }
 
     function verify(Proof calldata, string memory transferId, string memory recipient, int256 amount)
@@ -67,7 +67,10 @@ contract WebProofVerifier is Verifier, MailboxClient {
 
         usedTransferIds[keccak256(bytes(transferId))] = true;
 
-        IIntent.OrderData storage orderData = orders[id];
+        _hubChain = orderToHub[id];
+        _hub = chainToHub[_hubChain];
+
+        IIntent.OrderData storage orderData = orders[_hubChain][id];
 
         require(keccak256(bytes(recipient)) == keccak256(bytes(orderData.recipient)), "different recipient");
         require(uint256(amount) >= orderData.minimumAmount);
@@ -77,6 +80,7 @@ contract WebProofVerifier is Verifier, MailboxClient {
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
         (bytes32 id, IIntent.OrderData memory orderData) = abi.decode(_message, (bytes32, IIntent.OrderData));
-        orders[id] = orderData;
+        orders[_origin][id] = orderData;
+        orderToHub[id] = _origin;
     }
 }
