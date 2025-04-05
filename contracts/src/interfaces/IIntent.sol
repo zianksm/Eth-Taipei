@@ -33,6 +33,7 @@ interface IIntent {
         bytes8 swiftBicCode; // bank identifier OCBCSGSGXXX
         uint256 accountNumber; //
         string recipient;
+        uint256 minimumAmount;
     }
 
     struct OrderReserves {

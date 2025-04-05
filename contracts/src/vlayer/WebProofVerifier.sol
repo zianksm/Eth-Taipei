@@ -11,8 +11,13 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {IIntent} from "./../interfaces/IIntent.sol";
 import {MailboxClient} from "@hyperlane-xyz/client/MailboxClient.sol";
 
+import {TypeCasts} from "@hyperlane-xyz/libs/TypeCasts.sol";
+
 contract WebProofVerifier is Verifier, MailboxClient {
-    IIntent.OrderData internal lastMessage;
+    mapping(bytes32 => IIntent.OrderData) public orders;
+
+    // acts as like a nonce to the proof, prevent a proof to be used multiple times for different ids
+    mapping(bytes32 => bool) public usedTransferIds;
 
     address internal _hub;
     uint32 internal _hubChain;
@@ -37,12 +42,41 @@ contract WebProofVerifier is Verifier, MailboxClient {
     function verify(Proof calldata, string memory transferId, string memory recipient, int256 amount)
         public
         onlyVerified(prover, WebProofProver.main.selector)
-    {
-        // Verifier function signature must match the prover function signature
-        uint256 tokenId = uint256(keccak256(abi.encodePacked(transferId)));
-        // require(recipient.equal("MAJIN TEKNOLOGI DESAIN PT"), "Invalid recipient");
-        require(amount >= 95000000, "Invalid amount");
+    {}
+
+    function calculatePercentage(uint256 value, uint256 percentage) internal pure returns (uint256) {
+        // percentage is expressed with 18 decimals
+        // e.g., 10% would be 10 * 10^18 / 100 = 10^17
+
+        // We divide by 100 * 10^18 to get the correct percentage
+        uint256 oneHundredPercent = 100 * 10 ** 18;
+
+        // Calculate value * percentage / 100
+        // Using SafeMath pattern to prevent overflow
+        return (value * percentage) / oneHundredPercent;
     }
 
-    // function very
+    function settleVerified(
+        Proof calldata proof,
+        string memory transferId,
+        string memory recipient,
+        int256 amount,
+        bytes32 id
+    ) external {
+        verify(proof, transferId, recipient, amount);
+
+        usedTransferIds[keccak256(bytes(transferId))] = true;
+
+        IIntent.OrderData storage orderData = orders[id];
+
+        require(keccak256(bytes(recipient)) == keccak256(bytes(orderData.recipient)), "different recipient");
+        require(uint256(amount) >= orderData.minimumAmount);
+
+        mailbox.dispatch(_hubChain, TypeCasts.addressToBytes32(_hub), abi.encode(id));
+    }
+
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
+        (bytes32 id, IIntent.OrderData memory orderData) = abi.decode(_message, (bytes32, IIntent.OrderData));
+        orders[id] = orderData;
+    }
 }
