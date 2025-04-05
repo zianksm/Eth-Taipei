@@ -3,6 +3,7 @@ import 'package:q_wallet/pages/empty_tab_page.dart';
 import 'package:q_wallet/pages/wallet_tab.dart';
 import 'package:q_wallet/pages/order_book_tab.dart';
 import 'package:q_wallet/pages/transaction_tab.dart';
+import 'package:q_wallet/pages/profile_tab.dart';
 
 class WalletHomePage extends StatefulWidget {
   const WalletHomePage({super.key});
@@ -68,7 +69,7 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
           EmptyTabPage(tabName: 'Stats'),
           WalletTab(),
           TransactionTab(),
-          EmptyTabPage(tabName: 'Profile'),
+          ProfileTab(),
         ],
       ),
       bottomNavigationBar: Container(
