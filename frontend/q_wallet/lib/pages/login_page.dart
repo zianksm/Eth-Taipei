@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<List<String>> _fetchEnsNames(String address) async {
     try {
       final apiUrl = dotenv.env['ENS_API_URL'] ?? 'http://localhost:3000';
-      final url = Uri.parse('$apiUrl/ens/0x$address');
+      final url = Uri.parse('$apiUrl/ens/$address');
       final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -146,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
     final privateKeyBytes = web3.keccak256(seed); // 32-byte private key
     final privateKey = web3.bytesToHex(privateKeyBytes, include0x: true); // Hex string with 0x
     final credentials = web3.EthPrivateKey(privateKeyBytes); // Create from bytes
-    final walletAddress = credentials.address.toString(); // Get address as hex string
+    final walletAddress = '0x' + credentials.address.toString(); // Get address as hex string
 
     return {
       'privateKey': privateKey,
