@@ -8,7 +8,7 @@ import "./../test/Base.sol";
 contract Deployer is Script {
     uint256 pk = vm.envUint("PRIVATE_KEY");
 
-    address celoMailBox = 0xEf9F292fcEBC3848bF4bB92a96a04F9ECBb78E59;
+    address celoMailBox = 0x50da3B3907A08a24fe4999F4Dcf337E8dC7954bb;
 
     function run() external {
         vm.startBroadcast(pk);
