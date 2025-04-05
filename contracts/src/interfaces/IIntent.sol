@@ -3,7 +3,11 @@ pragma solidity ^0.8.0;
 interface IIntent {
     type IntentId is bytes32;
 
-    /// @dev by default all intents have partial fill
+    struct Call {
+        address dest;
+        bytes data;
+    }
+
     struct Intents {
         address inToken;
         address outToken;
@@ -14,7 +18,26 @@ interface IIntent {
         uint256 outAmount;
     }
 
-    struct FillerData{
-        bytes proof;
+
+    struct OrderData {
+        address token;
+        uint256 amount;
+    }
+
+    struct OrderMessage {
+        bytes32 id;
+        uint256 amount;
+    }
+
+     struct OrderReserves {
+        address token;
+        uint256 amount;
+        OrderReserve inner;
+    }
+
+    struct OrderReserve {
+        address filler;
+        uint256 amount;
+        uint256 deposit;
     }
 }

@@ -5,7 +5,8 @@
   "license": "MIT",
   "dependencies": {
     "@hyperlane-xyz/core": "^5.4.1",
-    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@polymerdao/prover-contracts": "^0.0.17",
     "@uniswap/permit2": "github:Uniswap/permit2"
   }
