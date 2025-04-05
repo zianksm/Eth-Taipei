@@ -7,7 +7,7 @@ import {IIntent} from "./../../interfaces/IIntent.sol";
 
 // needed to lock user funds for the intent, because if not then there's a possibility the intent fails and create a DOS situation
 // where intent keeps failing, so user funds needs to be locked here
-abstract contract ReserveHandler is Base7683, TokenAction {
+abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
     mapping(bytes32 => IIntent.OrderReserves) internal orderReserves;
 
     mapping(address => uint256) public nonce;
@@ -53,7 +53,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
         reserves.amount += amount;
         reserves.token = token;
         reserves.bankType = bankType;
-        reserves.bankAccountDest = bankAccountDest
+        reserves.bankAccountDest = bankAccount;
     }
 
     function _ensureNotReserved(bytes32 id) internal {
