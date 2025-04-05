@@ -144,6 +144,19 @@ class _WebviewPageState extends State<WebviewPage> {
     final ensUrl = dotenv.env['ENS_URL'] ?? 'https://sepolia.app.ens.domains';
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white), // White icon for visibility
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context); // Go back to previous page
+            }
+          },
+        ),
+        title: const Text('Webview', style: TextStyle(color: Colors.white)), // White text
+        backgroundColor: Colors.transparent, // Transparent background
+        elevation: 0, // No shadow
+      ),
       body: InAppWebView(
         initialUrlRequest: URLRequest(url: WebUri(ensUrl)),
         initialOptions: InAppWebViewGroupOptions(
