@@ -1,13 +1,16 @@
+use IIntent::getOrderReservesCall;
 use IOriginSettler::Open;
+use alloy::dyn_abi::SolType;
 use alloy::eips::BlockNumberOrTag;
-use alloy::primitives::address;
+use alloy::primitives::{Bytes, TxKind, address};
 use alloy::providers::{Provider, ProviderBuilder, WsConnect};
-use alloy::rpc::types::Filter;
+use alloy::rpc::types::{Filter, TransactionInput, TransactionRequest};
 use alloy::sol;
-use alloy::sol_types::SolEvent;
+use alloy::sol_types::{SolCall, SolEvent};
 use eyre::Result;
 use futures_util::stream::StreamExt;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 sol! {// SPDX-License-Identifier: UNLICENSED
 
@@ -167,6 +170,58 @@ sol! {// SPDX-License-Identifier: UNLICENSED
         /// @param fillerData Data provided by the filler to inform the fill or express their preferences
         function fill(bytes32 orderId, bytes calldata originData, bytes calldata fillerData) external payable;
     }
+
+    interface IIntent {
+        function getOrderReserves(bytes32 id) external view returns (IIntent.OrderReserves memory);
+
+        type IntentId is bytes32;
+
+        struct Call {
+            address dest;
+            bytes data;
+        }
+
+        struct Intents {
+            address inToken;
+            address outToken;
+        }
+
+        struct IntentSpecification {
+            uint256 inAmount;
+            uint256 outAmount;
+        }
+
+        enum BankType {
+            WISE
+        }
+
+        struct OrderData {
+            address token;
+            uint256 amount;
+            BankType bankType;
+            uint256 bankNumber;
+        }
+
+        struct OrderMessage {
+            bytes32 id;
+            uint256 amount;
+        }
+
+        struct OrderReserves {
+            address token;
+            uint256 amount;
+            BankType bankType;
+            uint256 bankAccountDest;
+            OrderReserve inner;
+        }
+
+        struct OrderReserve {
+            address filler;
+            uint256 amount;
+            uint256 deposit;
+        }
+    }
+
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -223,6 +278,10 @@ async fn main() -> Result<()> {
     let celo_testnet_wss: WsConnect = WsConnect::new("wss://alfajores-forno.celo-testnet.org/ws");
     let provider = ProviderBuilder::new().on_ws(celo_testnet_wss).await?;
 
+    let request = reqwest::Client::new();
+    let wise_request_builder: reqwest::RequestBuilder =
+        request.post("https://api.sandbox.wise.com/v1/transfers");
+
     // Listen to events via filter logs
     let contract_to_filter = address!("0x0000000000000000000000000000000000000000");
     let filter = Filter::new()
@@ -240,16 +299,55 @@ async fn main() -> Result<()> {
         let decoded = log.log_decode::<Open>()?.inner.data;
         let order_id = decoded.orderId;
 
-        // // Call "getOrderReserves"
-        // let reserves =
+        let get_order_reserves_call = getOrderReservesCall { id: order_id };
+        let tx = TransactionRequest {
+            from: None,
+            to: Some(TxKind::Call(contract_to_filter)),
+            gas_price: None,
+            max_fee_per_gas: None,
+            max_priority_fee_per_gas: None,
+            max_fee_per_blob_gas: None,
+            gas: None,
+            value: None,
+            input: TransactionInput {
+                input: Some(Bytes::from(get_order_reserves_call.abi_encode())),
+                data: None,
+            },
+            nonce: None,
+            chain_id: None,
+            access_list: None,
+            transaction_type: None,
+            blob_versioned_hashes: None,
+            sidecar: None,
+            authorization_list: None,
+        };
 
-        // let wise_transfer_request = WiseTransferRequest::new(
-        //     decoded.0,
-        //     decoded.1,
-        //     decoded.2,
-        //     decoded.3,
-        //     decoded.4,
-        // );
+        let reserves = provider.call(tx).await?;
+        let order_reserves = IIntent::OrderReserves::abi_decode(&reserves, true)?;
+
+        println!("reserves: {:?}", reserves);
+
+        let wise_transfer_request = WiseTransferRequest::new(
+            0,
+            order_reserves.bankAccountDest.to::<i64>(),
+            Uuid::new_v4().to_string(),
+            Uuid::new_v4().to_string(),
+            TransferDetails {
+                reference: "".to_string(),
+                transfer_purpose: "".to_string(),
+                transfer_purpose_sub_transfer_purpose: "".to_string(),
+                source_of_funds: "".to_string(),
+            },
+        );
+
+        let wise_request = wise_request_builder
+            .try_clone()
+            .unwrap()
+            .json(&wise_transfer_request)
+            .send()
+            .await?;
+
+        println!("wise_request: {:?}", wise_request);
 
         // // Call the Wise API here, after we have confirmed
         // serde_json::value::to_value(value)
