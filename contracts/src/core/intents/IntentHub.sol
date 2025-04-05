@@ -35,7 +35,7 @@ contract IntentHub is FundsCustody, MailboxClient {
 
     function open(OnchainCrossChainOrder calldata _order) external payable override {
         bytes32 id = _open(_order);
-        // _relayNewOrderToVerifier(id, _order.);
+        _relayNewOrderToVerifier(id, orderReserves[id].amount);
     }
 
     function openFor(

@@ -39,9 +39,11 @@ abstract contract FundsCustody is ReserveHandler {
 
         openOrders[orderId] = abi.encode(_order.orderDataType, _order.orderData);
         orderStatus[orderId] = OPENED;
+
+        nonce = newNonce(msg.sender);
+
         _useNonce(msg.sender, nonce);
 
-        bytes32 id = _open(_order);
         IIntent.OrderData memory orderData = abi.decode(_order.orderData, (IIntent.OrderData));
         _createOrder(id, orderData.token, orderData.amount);
 

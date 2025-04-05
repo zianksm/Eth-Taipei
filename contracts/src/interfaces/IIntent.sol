@@ -23,4 +23,16 @@ interface IIntent {
         bytes32 id;
         uint256 amount;
     }
+
+     struct OrderReserves {
+        address token;
+        uint256 amount;
+        OrderReserve inner;
+    }
+
+    struct OrderReserve {
+        address filler;
+        uint256 amount;
+        uint256 deposit;
+    }
 }

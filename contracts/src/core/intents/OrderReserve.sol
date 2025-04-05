@@ -8,19 +8,17 @@ import {IIntent} from "./../../interfaces/IIntent.sol";
 // needed to lock user funds for the intent, because if not then there's a possibility the intent fails and create a DOS situation
 // where intent keeps failing, so user funds needs to be locked here
 abstract contract ReserveHandler is Base7683, TokenAction {
-    struct OrderReserves {
-        address token;
-        uint256 amount;
-        OrderReserve inner;
+    mapping(bytes32 => IIntent.OrderReserves) internal orderReserves;
+
+    mapping(address => uint256) public nonce;
+
+    function newNonce(address who) internal returns(uint256) {
+        return ++nonce[who];
     }
 
-    struct OrderReserve {
-        address filler;
-        uint256 amount;
-        uint256 deposit;
+    function getOrderReserves(bytes32 id) external view returns (IIntent.OrderReserves memory) {
+        return orderReserves[id];
     }
-
-    mapping(bytes32 => OrderReserves) public orderReserves;
 
     // this is unsecure, ideally it's dyanmically calculated but for simplicity sake
     // you just need to deposit this amount everytime you want to fill and reserve an order,
@@ -34,13 +32,13 @@ abstract contract ReserveHandler is Base7683, TokenAction {
 
     /// @dev can only be called by verifier contract after verifying the proof
     function _settle(bytes32 id) internal {
-        OrderReserves storage order = orderReserves[id];
+        IIntent.OrderReserves storage order = orderReserves[id];
 
         address filler = order.inner.filler;
-        
+
         payable(filler).transfer(UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT);
         transfer(order.token, filler, order.amount);
-        
+
         delete orderReserves[id];
 
         bytes[] memory __placeholder;
@@ -52,7 +50,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
     }
 
     function _createOrder(bytes32 id, address token, uint256 amount) internal {
-        OrderReserves storage reserves = orderReserves[id];
+        IIntent.OrderReserves storage reserves = orderReserves[id];
         reserves.amount += amount;
     }
 
@@ -68,7 +66,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
     }
 
     function _incrementFillerReserve(bytes32 id, address who, uint256 amount) internal {
-        OrderReserve storage reserveInfo = orderReserves[id].inner;
+        IIntent.OrderReserve storage reserveInfo = orderReserves[id].inner;
         reserveInfo.amount += amount;
         reserveInfo.filler = who;
 
