@@ -8,7 +8,7 @@ class BalanceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF8A2BE2), Color(0xFF4169E1), Color(0xFFFF69B4)],
+          colors: [Color(0xFF0055FF), Color(0xFF00F0FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
