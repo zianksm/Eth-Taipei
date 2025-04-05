@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:q_wallet/pages/empty_tab_page.dart';
 import 'package:q_wallet/pages/wallet_tab.dart';
+import 'package:q_wallet/pages/order_book_tab.dart';
+import 'package:q_wallet/pages/transaction_tab.dart';
+import 'package:q_wallet/pages/profile_tab.dart';
 
 class WalletHomePage extends StatefulWidget {
   const WalletHomePage({super.key});
@@ -37,7 +40,7 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
       appBar: AppBar(
         title: ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFF8A2BE2), Color(0xFF4169E1), Color(0xFFFF69B4)],
+            colors: [Color(0xFF0055FF), Color(0xFF00F0FF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ).createShader(bounds),
@@ -62,20 +65,20 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: const [
-          EmptyTabPage(tabName: 'Home'),
+          OrderBookTab(),
           EmptyTabPage(tabName: 'Stats'),
           WalletTab(),
-          EmptyTabPage(tabName: 'Transfer'),
-          EmptyTabPage(tabName: 'Profile'),
+          TransactionTab(),
+          ProfileTab(),
         ],
       ),
       bottomNavigationBar: Container(
         color: Colors.white,
         child: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFF8A2BE2),
+          labelColor: const Color(0xFF0055FF),
           unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFF8A2BE2),
+          indicatorColor: const Color(0xFF00F0FF),
           tabs: const [
             Tab(icon: Icon(Icons.home)),
             Tab(icon: Icon(Icons.show_chart)),
