@@ -16,8 +16,9 @@ contract IntentHub is FundsCustody, MailboxClient {
         _;
     }
 
-    constructor(address permit2, address _verifier, uint32 _verifierChainId, address mailbox)
-        FundsCustody(permit2)
+    // no permit 2 support for now
+    constructor(address _verifier, uint32 _verifierChainId, address mailbox)
+        FundsCustody(address(0))
         MailboxClient(mailbox)
     {
         verifier = _verifier;
@@ -34,6 +35,16 @@ contract IntentHub is FundsCustody, MailboxClient {
 
     function open(OnchainCrossChainOrder calldata _order) external payable override {
         bytes32 id = _open(_order);
+        // _relayNewOrderToVerifier(id, _order.);
+    }
+
+    function openFor(
+        GaslessCrossChainOrder calldata _order,
+        bytes calldata _signature,
+        bytes calldata _originFillerData
+    ) external override {
+        // TODO custom errors
+        revert("permit orders are not supported yet");
     }
 
     function _relayNewOrderToVerifier(bytes32 id, uint256 amount) internal {

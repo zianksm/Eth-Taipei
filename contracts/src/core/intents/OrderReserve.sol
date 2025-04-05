@@ -28,6 +28,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
 
     function reserve(OnchainCrossChainOrder memory order, address who) external payable {
         bytes32 id = _getOrderId(order);
+        _ensureNotReserved(id);
         _reserve(id, who);
     }
 
@@ -36,10 +37,10 @@ abstract contract ReserveHandler is Base7683, TokenAction {
         OrderReserves storage order = orderReserves[id];
 
         address filler = order.inner.filler;
-
+        
         payable(filler).transfer(UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT);
         transfer(order.token, filler, order.amount);
-
+        
         delete orderReserves[id];
 
         bytes[] memory __placeholder;
