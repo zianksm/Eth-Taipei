@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:q_wallet/pages/empty_tab_page.dart';
 import 'package:q_wallet/pages/wallet_tab.dart';
 import 'package:q_wallet/pages/order_book_tab.dart';
-
+import 'package:q_wallet/pages/transaction_tab.dart';
 
 class WalletHomePage extends StatefulWidget {
   const WalletHomePage({super.key});
@@ -67,7 +67,7 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
           OrderBookTab(),
           EmptyTabPage(tabName: 'Stats'),
           WalletTab(),
-          EmptyTabPage(tabName: 'Transfer'),
+          TransactionTab(),
           EmptyTabPage(tabName: 'Profile'),
         ],
       ),
