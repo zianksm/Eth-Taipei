@@ -13,8 +13,7 @@ import {CircuitConstants} from "@selfxyz/contracts/constants/CircuitConstants.so
 import {IIdentityRegistryV1} from "@selfxyz/contracts/interfaces/IIdentityRegistryV1.sol";
 
 contract SanctionScreeningCheck is SelfVerificationRoot {
-    error InvalidOfac();
-    error InvalidOfacRoot();
+    mapping(address user => bool isWhitelisted) public whitelistedUsers;
 
     constructor(
         address _identityVerificationHub,
@@ -38,14 +37,20 @@ contract SanctionScreeningCheck is SelfVerificationRoot {
         )
     {}
 
+    function whitelistUser(IVcAndDiscloseCircuitVerifier.VcAndDiscloseProof memory proof) public {
+        // Check OFAC sanctioned
+        verifySelfProof(proof);
+        whitelistedUsers[msg.sender] = true;
+    }
+
     function verifySelfProof(IVcAndDiscloseCircuitVerifier.VcAndDiscloseProof memory proof)
         public
         override
+        view
     {
         _verifyScope(proof);
         _verifyAttestationId(proof);
-
-        IIdentityVerificationHubV1.VcAndDiscloseVerificationResult memory result = _identityVerificationHub
+        _identityVerificationHub
             .verifyVcAndDisclose(
             IIdentityVerificationHubV1.VcAndDiscloseHubProof({
                 olderThanEnabled: _verificationConfig.olderThanEnabled,
