@@ -5,3 +5,6 @@ libs = ["lib"]
 solc = "0.8.28"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[rpc_endpoints]
+alfajores = "https://alfajores-forno.celo-testnet.org"
