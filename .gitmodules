@@ -4,4 +4,9 @@
 [submodule "contracts/lib/intents-framework"]
 	path = contracts/lib/intents-framework
 	url = https://github.com/BootNodeDev/intents-framework
-
+[submodule "self-contracts/lib/self"]
+	path = self-contracts/lib/self
+	url = https://github.com/selfxyz/self
+[submodule "self-contracts/lib/openzeppelin-contracts"]
+	path = self-contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
