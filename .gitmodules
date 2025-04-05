@@ -4,3 +4,4 @@
 [submodule "contracts/lib/intents-framework"]
 	path = contracts/lib/intents-framework
 	url = https://github.com/BootNodeDev/intents-framework
+
