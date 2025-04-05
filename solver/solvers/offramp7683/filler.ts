@@ -118,7 +118,9 @@ export class Offramp7683Filler extends BaseFiller<Offramp7683Metadata, ParsedArg
 
       const intentHubContractInstance = IntentHub__factory.connect(metadata.intentHub, signer)
 
-      const tx = await intentHubContractInstance.reserve(parsedArgs.orderId)
+      const tx = await intentHubContractInstance.reserve(parsedArgs.orderId, {
+        value: ethers.utils.parseEther("0.000000000001")
+      })
       await tx.wait();
 
       return { success: true, data: {} };

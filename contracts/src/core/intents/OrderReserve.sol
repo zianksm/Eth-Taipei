@@ -22,7 +22,7 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
 
     // this is unsecure, ideally it's dyanmically calculated but for simplicity sake
     // you just need to deposit this amount everytime you want to fill and reserve an order,
-    uint256 public constant UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT = 0.0001 ether;
+    uint256 public constant UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT = 0.0000000000001 ether;
 
     function reserve(bytes32 id) external payable {
         _ensureNotReserved(id);
@@ -75,7 +75,7 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         reserveInfo.amount += amount;
         reserveInfo.filler = who;
 
-        require(msg.value == UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT, "no deposit found");
+        require(msg.value >= UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT, "no deposit found");
         reserveInfo.deposit += UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT;
     }
 
