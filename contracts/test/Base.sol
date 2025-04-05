@@ -6,6 +6,7 @@ import "@hyperlane-xyz/mock/MockMailbox.sol";
 import "@hyperlane-xyz/test/TestRecipient.sol";
 import "./../src/core/intents/IntentHub.sol";
 import "forge-std/console.sol";
+import "./../src/module/ApproveExec.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockToken is ERC20 {
@@ -16,8 +17,26 @@ contract MockToken is ERC20 {
     }
 }
 
-contract MockMailBoxReceiver {
+contract MockMailBoxReceiver is MailboxClient {
     IIntent.OrderMessage internal lastMessage;
+
+    address internal _hub;
+    uint32 internal _hubChain;
+
+    // no permit 2 support for now
+    constructor(address mailbox, uint32 hubChain) MailboxClient(mailbox) {
+        _hubChain = hubChain;
+    }
+
+    function setHub(address hub) external {
+        _hub = hub;
+    }
+
+    function mockSettleAndVerify(bytes32 id) external {
+        bytes32 hub = TypeCasts.addressToBytes32(address(_hub));
+
+        mailbox.dispatch(_hubChain, hub, abi.encode(id));
+    }
 
     function getLastMessage() external view returns (IIntent.OrderMessage memory) {
         return lastMessage;
@@ -43,10 +62,13 @@ contract BaseTest is Test {
     MockToken token0;
     MockToken token1;
 
-    // TODO: replace this with actual proof verifier
-    MockMailBoxReceiver internal mockVerifier = new MockMailBoxReceiver();
+    SimpleExecBatchModule SimpleExecBatchModuleImpl = new SimpleExecBatchModule();
 
-    address internal user = address(40304);
+    // TODO: replace this with actual proof verifier
+    MockMailBoxReceiver internal mockVerifier;
+
+    uint256 internal userPk = 1;
+    address internal user = vm.addr(userPk);
 
     address internal mockFiller = address(34397483);
 
@@ -55,15 +77,21 @@ contract BaseTest is Test {
         verifierMailbox = new MockMailbox(verifierDest);
 
         originMailbox.addRemoteMailbox(verifierDest, verifierMailbox);
+        verifierMailbox.addRemoteMailbox(origin, originMailbox);
 
         // TODO: replace this with actual proof verifier
+        mockVerifier = new MockMailBoxReceiver(address(verifierMailbox), origin);
         hub = new IntentHub(address(mockVerifier), verifierDest, address(originMailbox));
+
+        mockVerifier.setHub(address(hub));
 
         token0 = new MockToken();
         token1 = new MockToken();
 
         token0.mint(user, type(uint128).max);
         token1.mint(user, type(uint128).max);
+
+        vm.deal(mockFiller, 100000 ether);
 
         vm.startPrank(user);
     }
@@ -78,7 +106,9 @@ contract BaseTest is Test {
     }
 
     function processInboundMessage() internal {
-        verifierMailbox.processNextInboundMessage();
+        try verifierMailbox.processNextInboundMessage() {} catch {}
+
+        try originMailbox.processNextInboundMessage() {} catch {}
     }
 
     function maxApprove(MockToken token, address to) internal {
