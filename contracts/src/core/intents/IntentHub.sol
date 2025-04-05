@@ -11,7 +11,7 @@ contract IntentHub is FundsCustody, MailboxClient {
 
     modifier onlyVerifier(address caller) {
         // TODO custom errors
-        require(caller == msg.sender);
+        require(caller == verifier, "caller is not verifier");
 
         _;
     }
