@@ -1,0 +1,46 @@
+{
+  "name": "simple",
+  "module": "prove.ts",
+  "type": "module",
+  "dependencies": {
+    "@noble/hashes": "^1.4.0",
+    "@vlayer/sdk": "0.1.0-nightly-20250404-51e4286",
+    "viem": "^2.17.5",
+    "@vlayer/react": "0.1.0-nightly-20250404-51e4286"
+  },
+  "scripts": {
+    "devnet:up": "docker compose --file docker-compose.devnet.yaml up -d",
+    "devnet:down": "docker compose --file docker-compose.devnet.yaml down",
+    "lint:solidity": "solhint '../src/**/*.sol' --max-warnings 0 && forge fmt ../src --check",
+    "lint-fix:solidity": "solhint '../src/**/*.sol' --fix --noPrompt && forge fmt ../src",
+    "prove:testnet": "VLAYER_ENV=testnet bun run prove.ts",
+    "prove:dev": "VLAYER_ENV=dev bun run prove.ts",
+    "deploy:testnet": "VLAYER_ENV=testnet bun run deploy.ts",
+    "deploy:dev": "VLAYER_ENV=dev bun run deploy.ts",
+    "test-web:dev": "TEST_MODE=headed VLAYER_ENV=dev bun run playwright test",
+    "test-web:testnet": "echo \"No tests specified yet\"",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "preview": "vite preview",
+    "web:dev": "VLAYER_ENV=dev bun run deploy.ts && vite",
+    "web:testnet": "VLAYER_ENV=testnet bun run deploy.ts && vite",
+    "test:unit": "vitest --run"
+  },
+  "peerDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.6",
+    "@types/eslint__js": "^8.42.3",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "eslint": "^9.7.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3",
+    "typescript-eslint": "^8.2.0",
+    "solhint": "^5.0.5"
+  }
+}

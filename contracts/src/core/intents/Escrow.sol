@@ -4,8 +4,7 @@ import {IntentLibrary} from "./../../libraries/Intent.sol";
 import "intents-framework/Base7683.sol";
 import {IIntent} from "./../../interfaces/IIntent.sol";
 import {ReserveHandler} from "./OrderReserve.sol";
-import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "openzeppelin-contracts/contracts/interfaces/IERC20.sol";
+import "intents-framework/ERC7683/IERC7683.sol";
 
 // needed to lock user funds for the intent, because if not then there's a possibility the intent fails and create a DOS situation
 // where intent keeps failing, so user funds needs to be locked here
@@ -32,7 +31,10 @@ abstract contract FundsCustody is ReserveHandler {
         revert("custom settlement");
     }
 
-    function _open(OnchainCrossChainOrder calldata _order) internal returns (bytes32 id) {
+    function _open(OnchainCrossChainOrder calldata _order)
+        internal
+        returns (bytes32 id, IIntent.OrderData memory orderData)
+    {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
 
         id = orderId;
@@ -44,8 +46,13 @@ abstract contract FundsCustody is ReserveHandler {
 
         _useNonce(msg.sender, nonce);
 
-        IIntent.OrderData memory orderData = abi.decode(_order.orderData, (IIntent.OrderData));
-        _createOrder(id, orderData.token, orderData.amount, orderData.bankType, orderData.bankNumber);
+        orderData = abi.decode(_order.orderData, (IIntent.OrderData));
+        _createOrder(id, orderData);
+
+        FillInstruction[] memory instruction = new FillInstruction[](1);
+        instruction[0] = FillInstruction(0, "", abi.encode(orderData));
+
+        resolvedOrder.fillInstructions = instruction;
 
         // since we're doing an off/on ramp, no tokens is actually transffered to other chains, so we must opt-out
         // from the standard accounting and transfer the token here, it'll be released after the zk proof is actually verified

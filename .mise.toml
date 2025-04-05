@@ -1,0 +1,15 @@
+[tools]
+bun = "latest"
+"npm:@hyperlane-xyz/cli" = "latest"
+rust = "1.81"
+
+[settings.npm]
+bun = true
+
+[env]
+_.path = [
+    "~/.cargo/bin",
+    "~/.foundry/bin",
+    "~/.risc0/bin",
+    "~/.vlayer/bin",
+]
