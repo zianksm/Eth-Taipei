@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:q_wallet/pages/empty_tab_page.dart';
 import 'package:q_wallet/pages/wallet_tab.dart';
+import 'package:q_wallet/pages/order_book_tab.dart';
+
 
 class WalletHomePage extends StatefulWidget {
   const WalletHomePage({super.key});
@@ -37,7 +39,7 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
       appBar: AppBar(
         title: ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFF8A2BE2), Color(0xFF4169E1), Color(0xFFFF69B4)],
+            colors: [Color(0xFF0055FF), Color(0xFF00F0FF)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ).createShader(bounds),
@@ -62,7 +64,7 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
       body: TabBarView(
         controller: _tabController,
         children: const [
-          EmptyTabPage(tabName: 'Home'),
+          OrderBookTab(),
           EmptyTabPage(tabName: 'Stats'),
           WalletTab(),
           EmptyTabPage(tabName: 'Transfer'),
