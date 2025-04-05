@@ -1,0 +1,12 @@
+{
+  "eco": {
+    "enabled": true
+  },
+  "hyperlane7683": {
+    "enabled": true
+  },
+  "offramp7683": {
+    "enabled": true,
+    "options": {}
+  }
+}

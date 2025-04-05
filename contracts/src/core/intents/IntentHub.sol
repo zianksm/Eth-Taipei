@@ -53,8 +53,8 @@ contract IntentHub is FundsCustody, MailboxClient {
     }
 
     function open(OnchainCrossChainOrder calldata _order) external payable override {
-        bytes32 id = _open(_order);
-        _relayNewOrderToVerifier(id, orderReserves[id].amount);
+        (bytes32 id, IIntent.OrderData memory orderData) = _open(_order);
+        _relayNewOrderToVerifier(id, orderData);
     }
 
     function openFor(
@@ -66,10 +66,10 @@ contract IntentHub is FundsCustody, MailboxClient {
         revert("permit orders are not supported yet");
     }
 
-    function _relayNewOrderToVerifier(bytes32 id, uint256 amount) internal {
+    function _relayNewOrderToVerifier(bytes32 id, IIntent.OrderData memory orderData) internal {
         bytes32 recipientAddress = TypeCasts.addressToBytes32(verifier);
 
-        mailbox.dispatch(verifierChainId, recipientAddress, abi.encode(IIntent.OrderMessage(id, amount)));
+        mailbox.dispatch(verifierChainId, recipientAddress, abi.encode(id, orderData));
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message)

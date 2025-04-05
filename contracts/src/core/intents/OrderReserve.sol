@@ -22,7 +22,7 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
 
     // this is unsecure, ideally it's dyanmically calculated but for simplicity sake
     // you just need to deposit this amount everytime you want to fill and reserve an order,
-    uint256 public constant UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT = 0.0001 ether;
+    uint256 public constant UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT = 0.0000000000001 ether;
 
     function reserve(bytes32 id) external payable {
         _ensureNotReserved(id);
@@ -50,14 +50,13 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         emit Settle(orderIds, __placeholder);
     }
 
-    function _createOrder(bytes32 id, address token, uint256 amount, IIntent.BankType bankType, uint256 bankAccount)
-        internal
-    {
+    function _createOrder(bytes32 id, IIntent.OrderData memory data) internal {
         IIntent.OrderReserves storage reserves = orderReserves[id];
-        reserves.amount += amount;
-        reserves.token = token;
-        reserves.bankType = bankType;
-        reserves.bankAccountDest = bankAccount;
+        reserves.amount += data.amount;
+        reserves.token = data.token;
+        reserves.bankAccountDest = data.accountNumber;
+        reserves.recipient = data.recipient;
+        reserves.swiftBicCode = data.swiftBicCode;
     }
 
     function _ensureNotReserved(bytes32 id) internal {
@@ -76,7 +75,7 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         reserveInfo.amount += amount;
         reserveInfo.filler = who;
 
-        require(msg.value == UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT, "no deposit found");
+        require(msg.value >= UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT, "no deposit found");
         reserveInfo.deposit += UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT;
     }
 

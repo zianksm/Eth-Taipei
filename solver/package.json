@@ -1,0 +1,52 @@
+{
+  "name": "solver",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "solver": "node ./dist/index.js",
+    "build": "tsc",
+    "dev": "tsx --watch ./index.ts",
+    "prettier:check": "prettier . --check",
+    "prettier:write": "prettier . --write",
+    "contracts:typegen": "typechain --node16-modules --target ethers-v5 --out-dir typechain **/**/contracts/*.json",
+    "postinstall": "yarn contracts:typegen",
+    "test": "vitest run",
+    "solver:add": "tsx scripts/solver-add.ts",
+    "solver:remove": "tsx scripts/solver-remove.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BootNodeDev/intents-framework/typescript/solver"
+  },
+  "author": "bootnode.dev",
+  "license": "Apache-2.0",
+  "description": "",
+  "devDependencies": {
+    "@inquirer/prompts": "^7.2.0",
+    "@typechain/ethers-v5": "^11.1.2",
+    "@types/copyfiles": "^2",
+    "copyfiles": "^2.4.1",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8",
+    "zod": "^3.23.8"
+  },
+  "dependencies": {
+    "@hyperlane-xyz/registry": "^9.3.0",
+    "@hyperlane-xyz/sdk": "^8.6.1",
+    "@hyperlane-xyz/utils": "^8.6.1",
+    "@libsql/client": "^0.14.0",
+    "chalk": "^5.3.0",
+    "dotenv-flow": "^4.1.0",
+    "ethers": "^5.7.2",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "pino-socket": "^7.4.0",
+    "uniqolor": "^1.1.1",
+    "@vlayer/sdk": "0.1.0-nightly-20250404-51e4286"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

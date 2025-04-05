@@ -1,8 +1,20 @@
 [profile.default]
 src = "src"
 out = "out"
-libs = ["lib"]
+libs = ["lib", "dependencies"]
 solc = "0.8.25"
 use_literal = true
+fs_permissions = [{ access = "read", path = "./testdata"}]
 
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+[dependencies]
+"@openzeppelin-contracts" = "5.0.1"
+forge-std = "1.9.4"
+risc0-ethereum = { version = "2.0.0", url = "https://github.com/vlayer-xyz/risc0-ethereum/releases/download/v2.0.0-soldeer/contracts.zip" }
+vlayer = "0.1.0-nightly-20250404-51e4286"
+
+[soldeer]
+# whether soldeer manages remappings
+remappings_generate = false
+# whether soldeer re-generates all remappings when installing, updating or uninstalling deps
+remappings_regenerate = false
+

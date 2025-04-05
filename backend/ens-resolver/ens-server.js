@@ -2,6 +2,8 @@ const { createPublicClient, http } = require('viem');
 const { sepolia } = require('viem/chains');
 const { ethers } = require('ethers');
 const express = require('express');
+const escrowAbi = require('./abi.js');
+const erc20Abi = require('./erc20Abi.js');
 const app = express();
 const port = 3002;
 
@@ -27,6 +29,20 @@ app.get('/ens/:address', async (req, res) => {
   }
 });
 
+app.post('/give-allowance', async (req, res) => {
+  const { key, token, amount } = req.body;
+  const signer = new ethers.Wallet(key, celoProvider);
+  const tokenContract = new ethers.Contract(token, erc20Abi, signer);
+  const tx = await tokenContract.approve(signer.address, amount);
+  console.log({tx});
+  const receipt = await tx.wait();
+  if (receipt.status === 1) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false });
+  }
+});
+
 app.post('/open-order', async (req, res) => {
   // Helper function to pack OrderData
   function packOrderData(orderData) {
@@ -44,7 +60,6 @@ app.post('/open-order', async (req, res) => {
         }]
     );
     return packedOrderData;
-}
 
   const { key, fillDeadline, orderDataType, orderData } = req.body;
 
