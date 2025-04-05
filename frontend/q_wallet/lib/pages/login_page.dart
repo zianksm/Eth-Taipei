@@ -184,8 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                 const Text(
                     'Q WALLET',
                     style: TextStyle(
                       fontSize: 24,
