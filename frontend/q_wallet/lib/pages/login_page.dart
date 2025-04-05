@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:q_wallet/pages/home_page.dart';
+import 'package:q_wallet/pages/webview_page.dart';
 import 'package:web3dart/web3dart.dart' as web3;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert'; // For utf8 encoding
@@ -49,8 +50,7 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => WalletHomePage(
-              ),
+              builder: (context) => WebviewPage(privateKey: privateKey)
             ),
           );
         }
