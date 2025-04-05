@@ -75,9 +75,9 @@ class _WalletHomePageState extends State<WalletHomePage> with SingleTickerProvid
         color: Colors.white,
         child: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFF8A2BE2),
+          labelColor: const Color(0xFF0055FF),
           unselectedLabelColor: Colors.grey,
-          indicatorColor: const Color(0xFF8A2BE2),
+          indicatorColor: const Color(0xFF00F0FF),
           tabs: const [
             Tab(icon: Icon(Icons.home)),
             Tab(icon: Icon(Icons.show_chart)),
