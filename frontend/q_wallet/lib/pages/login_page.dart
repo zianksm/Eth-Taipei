@@ -4,7 +4,9 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:q_wallet/pages/home_page.dart';
 import 'package:q_wallet/pages/webview_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:web3dart/web3dart.dart' as web3;
+import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert'; // For utf8 encoding
 
@@ -15,9 +17,30 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+
 class _LoginPageState extends State<LoginPage> {
   bool _isSigningIn = false;
   static const _storage = FlutterSecureStorage();
+
+  Future<List<String>> _fetchEnsNames(String address) async {
+    try {
+      final apiUrl = dotenv.env['ENS_API_URL'] ?? 'http://localhost:3000';
+      final url = Uri.parse('$apiUrl/ens/0x$address');
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final ensName = data['ensName'] as String;
+        return ensName.isEmpty ? [] : [ensName];
+      } else {
+        print('ENS API error: ${response.statusCode} - ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching ENS names: $e');
+      return [];
+    }
+  }
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isSigningIn = true);
@@ -43,17 +66,68 @@ class _LoginPageState extends State<LoginPage> {
         final walletAddress = walletData['address']!;
         final privateKey = walletData['privateKey']!;
 
-        // Optionally store the private key securely
-        await _storage.write(key: 'privateKey_${user.uid}', value: privateKey);
+        // Fetch ENS names
+        final ensNames = await _fetchEnsNames(walletAddress);
+        String? selectedEns;
 
-        if (mounted) {
+        if (ensNames.isNotEmpty && mounted) {
+          // Show dialog to choose ENS
+          selectedEns = await showDialog<String>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Select Your ENS Name'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: ensNames.map((name) => ListTile(
+                    title: Text(name),
+                    onTap: () => Navigator.pop(context, name),
+                  )).toList()..add(ListTile(
+                    title: const Text('Buy a new one'),
+                    onTap: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WebviewPage(privateKey: privateKey)
+                      ),
+                    ),
+                  )),
+                ),
+              ),
+            ),
+          );
+        }else{
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => WebviewPage(privateKey: privateKey)
+              ),
+            );
+          }
+        }
+
+        // Store private key and selected ENS
+        await _storage.write(key: 'privateKey_${user.uid}', value: privateKey);
+        if (selectedEns != null && selectedEns.isNotEmpty) {
+          await _storage.write(key: 'ensName_${user.uid}', value: selectedEns);
+          // Navigate to WalletHomePage only if ENS is selected and stored
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const WalletHomePage(),
+              ),
+            );
+          }
+        } else if (mounted) {
+          // If no ENS is selected, go to WebviewPage
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => WebviewPage(privateKey: privateKey)
+              builder: (context) => WebviewPage(privateKey: privateKey),
             ),
           );
         }
+        
       }
     } catch (e, stackTrace) {
       if (mounted) {
