@@ -8,19 +8,6 @@ import {IIntent} from "./../../interfaces/IIntent.sol";
 // needed to lock user funds for the intent, because if not then there's a possibility the intent fails and create a DOS situation
 // where intent keeps failing, so user funds needs to be locked here
 abstract contract ReserveHandler is Base7683, TokenAction {
-    address verifier;
-
-    modifier onlyVerifier() {
-        // TODO custom errors
-        require(verifier == msg.sender);
-
-        _;
-    }
-
-    constructor(address _verifier) {
-        verifier = _verifier;
-    }
-
     struct OrderReserves {
         address token;
         uint256 amount;
@@ -45,10 +32,22 @@ abstract contract ReserveHandler is Base7683, TokenAction {
     }
 
     /// @dev can only be called by verifier contract after verifying the proof
-    function _settle(bytes32 id) internal onlyVerifier {
-        address filler = orderReserves[id].inner.filler;
+    function _settle(bytes32 id) internal {
+        OrderReserves storage order = orderReserves[id];
+
+        address filler = order.inner.filler;
 
         payable(filler).transfer(UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT);
+        transfer(order.token, filler, order.amount);
+
+        delete orderReserves[id];
+
+        bytes[] memory __placeholder;
+        bytes32[] memory orderIds = new bytes32[](1);
+
+        orderIds[0] = id;
+
+        emit Settle(orderIds, __placeholder);
     }
 
     function _createOrder(bytes32 id, address token, uint256 amount) internal {

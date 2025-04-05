@@ -12,24 +12,13 @@ import {IERC20} from "openzeppelin-contracts/contracts/interfaces/IERC20.sol";
 abstract contract FundsCustody is ReserveHandler {
     using SafeERC20 for IERC20;
 
-    constructor(address permit2, address verifier) ReserveHandler(verifier) Base7683(permit2) {}
-
-    function _verify(bytes memory proof) internal returns (bool) {
-        return true;
-    }
+    constructor(address permit2) Base7683(permit2) {}
 
     function _fillOrder(bytes32 _orderId, bytes calldata _originData, bytes calldata _fillerData) internal override {
+        // TODO custom errors
+        revert("nothing to fill");
+
         // we do nothing since this is an off-ramp first
-    }
-
-    function open(OnchainCrossChainOrder calldata _order) external payable override {
-        bytes32 id = _open(_order);
-        IIntent.OrderData memory orderData = abi.decode(_order.orderData, (IIntent.OrderData));
-        _createOrder(id, orderData.token, orderData.amount);
-
-        // since we're doing an off/on ramp, no tokens is actually transffered to other chains, so we must opt-out
-        // from the standard accounting and transfer the token here, it'll be released after the zk proof is actually verified
-        transferFromUserToSelf(orderData.token, orderData.amount);
     }
 
     // TODO only callable by funds lock contract after verifying zk proof
@@ -39,9 +28,8 @@ abstract contract FundsCustody is ReserveHandler {
         bytes[] memory _ordersOriginData,
         bytes[] memory _ordersFillerData
     ) internal override {
-        for (uint256 i = 0; i < _orderIds.length; i++) {
-            _settle(_orderIds[i]);
-        }
+        // TODO custom errors
+        revert("custom settlement");
     }
 
     function _open(OnchainCrossChainOrder calldata _order) internal returns (bytes32 id) {
@@ -53,18 +41,13 @@ abstract contract FundsCustody is ReserveHandler {
         orderStatus[orderId] = OPENED;
         _useNonce(msg.sender, nonce);
 
-        uint256 totalValue;
-        for (uint256 i = 0; i < resolvedOrder.minReceived.length; i++) {
-            address token = TypeCasts.bytes32ToAddress(resolvedOrder.minReceived[i].token);
-            if (token == address(0)) {
-                totalValue += resolvedOrder.minReceived[i].amount;
-            } else {
-                IERC20(token).safeTransferFrom(msg.sender, address(this), resolvedOrder.minReceived[i].amount);
-            }
-        }
+        bytes32 id = _open(_order);
+        IIntent.OrderData memory orderData = abi.decode(_order.orderData, (IIntent.OrderData));
+        _createOrder(id, orderData.token, orderData.amount);
 
-        if (msg.value != totalValue) revert InvalidNativeAmount();
-
+        // since we're doing an off/on ramp, no tokens is actually transffered to other chains, so we must opt-out
+        // from the standard accounting and transfer the token here, it'll be released after the zk proof is actually verified
+        transferFromUserToSelf(orderData.token, orderData.amount);
         emit Open(orderId, resolvedOrder);
     }
 
@@ -92,7 +75,7 @@ abstract contract FundsCustody is ReserveHandler {
         revert("not supported");
     }
 
-    function _refundOrders(OnchainCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal override{
+    function _refundOrders(OnchainCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal override {
         // TODO custom errors
         revert("not supported");
     }

@@ -18,4 +18,9 @@ interface IIntent {
         address token;
         uint256 amount;
     }
+
+    struct OrderMessage {
+        bytes32 id;
+        uint256 amount;
+    }
 }
