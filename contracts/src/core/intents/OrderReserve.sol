@@ -50,14 +50,14 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         emit Settle(orderIds, __placeholder);
     }
 
-    function _createOrder(bytes32 id, address token, uint256 amount, IIntent.BankType bankType, uint256 bankAccount)
-        internal
-    {
+    function _createOrder(bytes32 id, IIntent.OrderData memory data) internal {
         IIntent.OrderReserves storage reserves = orderReserves[id];
-        reserves.amount += amount;
-        reserves.token = token;
-        reserves.bankType = bankType;
-        reserves.bankAccountDest = bankAccount;
+        reserves.amount += data.amount;
+        reserves.token = data.token;
+        reserves.bankType = data.bankType;
+        reserves.bankAccountDest = data.accountNumber;
+        reserves.recipient = data.recipient;
+        reserves.swiftBicCode = data.swiftBicCode;
     }
 
     function _ensureNotReserved(bytes32 id) internal {

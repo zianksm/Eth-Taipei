@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 interface IIntent {
     function getOrderReserves(bytes32 id) external view returns (IIntent.OrderReserves memory);
-    
+
     type IntentId is bytes32;
 
     event Reserved(address indexed filler, bytes32 order);
@@ -30,12 +30,9 @@ interface IIntent {
         address token;
         uint256 amount;
         BankType bankType;
-        uint256 bankNumber;
-    }
-
-    struct OrderMessage {
-        bytes32 id;
-        uint256 amount;
+        bytes8 swiftBicCode; // bank identifier OCBCSGSGXXX
+        uint256 accountNumber; //
+        string recipient;
     }
 
     struct OrderReserves {
@@ -43,6 +40,8 @@ interface IIntent {
         uint256 amount;
         BankType bankType;
         uint256 bankAccountDest;
+        bytes8 swiftBicCode; // bank identifier OCBCSGSGXXX
+        string recipient;
         OrderReserve inner;
     }
 

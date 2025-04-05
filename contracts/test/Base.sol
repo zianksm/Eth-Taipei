@@ -18,7 +18,8 @@ contract MockToken is ERC20 {
 }
 
 contract MockVerifier is MailboxClient {
-    IIntent.OrderMessage internal lastMessage;
+    IIntent.OrderData internal lastMessage;
+    bytes32 public lastMessageId;
 
     address internal _hub;
     uint32 internal _hubChain;
@@ -42,12 +43,12 @@ contract MockVerifier is MailboxClient {
         mailbox.dispatch(_hubChain, hub, abi.encode(id));
     }
 
-    function getLastMessage() external view returns (IIntent.OrderMessage memory) {
+    function getLastMessage() external view returns (IIntent.OrderData memory) {
         return lastMessage;
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
-        lastMessage = abi.decode(_message, (IIntent.OrderMessage));
+        (lastMessageId, lastMessage) = abi.decode(_message, (bytes32, IIntent.OrderData));
     }
 }
 
@@ -104,7 +105,7 @@ contract BaseTest is Test {
         uint32 deadline = type(uint32).max;
         bytes32 orderType = "";
 
-        bytes memory data = abi.encode(IIntent.OrderData(address(token), amount, IIntent.BankType.WISE, 0));
+        bytes memory data = abi.encode(IIntent.OrderData(address(token), amount, IIntent.BankType.WISE, 0, 0, ""));
 
         return OnchainCrossChainOrder(deadline, orderType, data);
     }

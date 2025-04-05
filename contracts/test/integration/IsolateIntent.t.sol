@@ -17,9 +17,10 @@ contract IntentHubTest is BaseTest {
         hub.open(order);
         processInboundMessage();
 
-        IIntent.OrderMessage memory lastMessage = mockVerifier.getLastMessage();
+        IIntent.OrderData memory lastMessage = mockVerifier.getLastMessage();
+        bytes32 id = mockVerifier.lastMessageId();
 
-        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(lastMessage.id);
+        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(id);
 
         assertEq(orderBook.amount, amount);
         assertEq(orderBook.token, address(token0));
@@ -34,18 +35,19 @@ contract IntentHubTest is BaseTest {
         hub.open(order);
         processInboundMessage();
 
-        IIntent.OrderMessage memory lastMessage = mockVerifier.getLastMessage();
+        IIntent.OrderData memory lastMessage = mockVerifier.getLastMessage();
+        bytes32 id = mockVerifier.lastMessageId();
 
         vm.startPrank(mockFiller);
         uint256 ethBalanceBeforeReserve = mockFiller.balance;
 
-        hub.reserve{value: hub.UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT()}(lastMessage.id);
+        hub.reserve{value: hub.UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT()}(id);
 
         uint256 ethBalanceAfterReserve = mockFiller.balance;
 
         assertEq(ethBalanceBeforeReserve - ethBalanceAfterReserve, hub.UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT());
 
-        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(lastMessage.id);
+        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(id);
 
         assertEq(orderBook.inner.filler, mockFiller);
         assertEq(orderBook.inner.amount, amount);
@@ -60,10 +62,11 @@ contract IntentHubTest is BaseTest {
         hub.open(order);
         processInboundMessage();
 
-        IIntent.OrderMessage memory lastMessage = mockVerifier.getLastMessage();
+        IIntent.OrderData memory lastMessage = mockVerifier.getLastMessage();
+        bytes32 id = mockVerifier.lastMessageId();
 
         vm.startPrank(mockFiller);
-        hub.reserve{value: hub.UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT()}(lastMessage.id);
+        hub.reserve{value: hub.UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT()}(id);
 
         // do some shit, send actual paypal or smth
 
@@ -71,7 +74,7 @@ contract IntentHubTest is BaseTest {
 
         uint256 ethBalanceBeforeSettle = mockFiller.balance;
 
-        mockVerifier.mockSettleAndVerify(lastMessage.id);
+        mockVerifier.mockSettleAndVerify(id);
         processInboundMessage();
 
         uint256 ethBalanceAfterSettle = mockFiller.balance;
@@ -80,7 +83,7 @@ contract IntentHubTest is BaseTest {
         assertEq(ethBalanceAfterSettle - ethBalanceBeforeSettle, hub.UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT());
 
         // verify orderbook is actually deleted
-        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(lastMessage.id);
+        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(id);
         assertEq(orderBook.inner.filler, address(0));
         assertEq(orderBook.inner.amount, 0);
     }

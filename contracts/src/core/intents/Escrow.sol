@@ -30,7 +30,10 @@ abstract contract FundsCustody is ReserveHandler {
         revert("custom settlement");
     }
 
-    function _open(OnchainCrossChainOrder calldata _order) internal returns (bytes32 id) {
+    function _open(OnchainCrossChainOrder calldata _order)
+        internal
+        returns (bytes32 id, IIntent.OrderData memory orderData)
+    {
         (ResolvedCrossChainOrder memory resolvedOrder, bytes32 orderId, uint256 nonce) = _resolveOrder(_order);
 
         id = orderId;
@@ -42,8 +45,8 @@ abstract contract FundsCustody is ReserveHandler {
 
         _useNonce(msg.sender, nonce);
 
-        IIntent.OrderData memory orderData = abi.decode(_order.orderData, (IIntent.OrderData));
-        _createOrder(id, orderData.token, orderData.amount, orderData.bankType, orderData.bankNumber);
+        orderData = abi.decode(_order.orderData, (IIntent.OrderData));
+        _createOrder(id, orderData);
 
         // since we're doing an off/on ramp, no tokens is actually transffered to other chains, so we must opt-out
         // from the standard accounting and transfer the token here, it'll be released after the zk proof is actually verified

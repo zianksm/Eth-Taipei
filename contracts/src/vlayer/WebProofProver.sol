@@ -31,7 +31,7 @@ contract WebProofProver is Prover {
 
     /**
      * @notice This function is workaround due to issue with Vlayer's TLSnotary infrastructure
-     * Only accepts https://api.x.com for now 
+     * Only accepts https://api.x.com for now
      */
     function main(WebProof calldata webProof, string calldata transferId, address)
         public
@@ -62,7 +62,7 @@ contract WebProofProver is Prover {
     /**
      * @notice This function is not working as the TLSnotary and wsproxy backend are not working as
      * all Vlayer API keys were hardcoded to point to api.x.com as of this writing.
-     * Issue has been acknowledged by vlayer's team as TODO. 
+     * Issue has been acknowledged by vlayer's team as TODO.
      */
     function main2(WebProof calldata webProof, string calldata transferId, address account)
         public

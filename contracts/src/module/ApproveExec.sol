@@ -4,7 +4,6 @@ import {IERC20} from "openzeppelin-contracts/interfaces/IERC20.sol";
 import {IIntent} from "./../interfaces/IIntent.sol";
 
 contract SimpleExecBatchModule {
-
     // will just arbitrarily execute everything
     function execBatch(IIntent.Call[] memory calls) public {
         for (uint256 i = 0; i < calls.length; i++) {
