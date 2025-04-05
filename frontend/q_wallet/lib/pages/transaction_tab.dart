@@ -18,6 +18,26 @@ class _TransactionTabState extends State<TransactionTab> {
   bool _isOffRampActive = true; // Tracks active tab (Off-Ramp or On-Ramp)
   int _offRampStep = 1; // Tracks Off-Ramp flow step
   int _onRampStep = 1; // Tracks On-Ramp flow step
+  bool _isKycVerified = false; // Tracks KYC verification state
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKycState(); // Load KYC state when widget initializes
+  }
+
+  Future<void> _loadKycState() async {
+    final storedKyc = await storage.read(key: 'kyc_verified');
+    if (storedKyc == 'true') {
+      setState(() {
+        _isKycVerified = true;
+      });
+    }
+  }
+
+  Future<void> _saveKycState() async {
+    await storage.write(key: 'kyc_verified', value: 'true');
+  }
 
   Future<Map<String, String>?> _getWalletDetails() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -116,7 +136,7 @@ class _TransactionTabState extends State<TransactionTab> {
 
   Widget _buildOffRampFlow(Color qGray, Color qAccent) {
     switch (_offRampStep) {
-      case 1: // Step 1: KYC Verification (Placeholder)
+      case 1: // Step 1: KYC Verification or KYC Verified with Give Allowance
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: qGray, borderRadius: BorderRadius.circular(16)),
@@ -130,20 +150,44 @@ class _TransactionTabState extends State<TransactionTab> {
               const SizedBox(height: 16),
               const Text('Complete KYC Verification', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text(
-                'To use Off-Ramp services, complete identity verification.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => setState(() => _offRampStep = 2), // Simulate KYC completion
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              if (_isKycVerified) ...[
+                Row(
+                  children: [
+                    Icon(Icons.check, color: qAccent),
+                    const SizedBox(width: 8),
+                    const Text('KYC Verified'),
+                  ],
                 ),
-                child: const Text('Start Verification', style: TextStyle(color: Colors.black)),
-              ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => setState(() => _offRampStep = 2), // Move to Give Allowance
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Give Allowance', style: TextStyle(color: Colors.black)),
+                ),
+              ] else ...[
+                const Text(
+                  'To use Off-Ramp services, complete identity verification.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isKycVerified = true; // Mark KYC as verified
+                      _saveKycState(); // Persist the state
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Start Verification', style: TextStyle(color: Colors.black)),
+                ),
+              ],
             ],
           ),
         );
@@ -236,7 +280,7 @@ class _TransactionTabState extends State<TransactionTab> {
                   final result = jsonDecode(response.body);
                   if (response.statusCode == 200 && result['success']) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Allowance granted for $amount USDC')));
-                    setState(() => _offRampStep = 1); // Reset or move to next step
+                    setState(() => _offRampStep = 1); // Reset to Step 1
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Allowance failed')));
                   }
@@ -383,7 +427,7 @@ class _TransactionTabState extends State<TransactionTab> {
                   final result = jsonDecode(response.body);
                   if (response.statusCode == 200 && result['success']) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Order opened for $amount USDC')));
-                    setState(() => _onRampStep = 1); // Reset or move to next step
+                    setState(() => _onRampStep = 1); // Reset to Step 1
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order failed')));
                   }
