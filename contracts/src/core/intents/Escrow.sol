@@ -12,7 +12,7 @@ import {IERC20} from "openzeppelin-contracts/contracts/interfaces/IERC20.sol";
 abstract contract FundsCustody is ReserveHandler {
     using SafeERC20 for IERC20;
 
-    constructor(address permit2) Base7683(permit2) {}
+    constructor(address permit2, address verifier) ReserveHandler(verifier) Base7683(permit2) {}
 
     function _verify(bytes memory proof) internal returns (bool) {
         return true;
@@ -72,12 +72,27 @@ abstract contract FundsCustody is ReserveHandler {
         return keccak256(abi.encode(_order));
     }
 
+    function _getOrderId(GaslessCrossChainOrder memory _order) internal pure override returns (bytes32) {
+        // TODO custom errors
+        revert("not supported");
+    }
+
     function _resolveOrder(GaslessCrossChainOrder memory _order, bytes calldata _originFillerData)
         internal
         view
         override
         returns (ResolvedCrossChainOrder memory _resolvedOrder, bytes32 _orderId, uint256 _nonce)
     {
+        // TODO custom errors
+        revert("not supported");
+    }
+
+    function _refundOrders(GaslessCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal override {
+        // TODO custom errors
+        revert("not supported");
+    }
+
+    function _refundOrders(OnchainCrossChainOrder[] memory _orders, bytes32[] memory _orderIds) internal override{
         // TODO custom errors
         revert("not supported");
     }

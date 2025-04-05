@@ -6,3 +6,4 @@ intents-framework/=lib/intents-framework/solidity/src/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
 @uniswap/=node_modules/@uniswap/
 @hyperlane-xyz/=node_modules/@hyperlane-xyz/core/contracts/
+@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/

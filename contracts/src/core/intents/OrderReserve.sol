@@ -17,6 +17,10 @@ abstract contract ReserveHandler is Base7683, TokenAction {
         _;
     }
 
+    constructor(address _verifier) {
+        verifier = _verifier;
+    }
+
     struct OrderReserves {
         address token;
         uint256 amount;
@@ -43,7 +47,7 @@ abstract contract ReserveHandler is Base7683, TokenAction {
     /// @dev can only be called by verifier contract after verifying the proof
     function _settle(bytes32 id) internal onlyVerifier {
         address filler = orderReserves[id].inner.filler;
-        
+
         payable(filler).transfer(UNSAFE_HARDCODE_MINIMUM_RESERVE_DEPOSIT);
     }
 
