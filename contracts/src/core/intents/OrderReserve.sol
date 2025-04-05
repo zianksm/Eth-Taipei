@@ -48,10 +48,12 @@ abstract contract ReserveHandler is Base7683, TokenAction {
         emit Settle(orderIds, __placeholder);
     }
 
-    function _createOrder(bytes32 id, address token, uint256 amount) internal {
+    function _createOrder(bytes32 id, address token, uint256 amount, IIntent.BankType bankType, uint256 bankAccount) internal {
         IIntent.OrderReserves storage reserves = orderReserves[id];
         reserves.amount += amount;
         reserves.token = token;
+        reserves.bankType = bankType;
+        reserves.bankAccountDest = bankAccountDest
     }
 
     function _ensureNotReserved(bytes32 id) internal {

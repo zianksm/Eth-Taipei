@@ -37,6 +37,8 @@ interface IIntent {
     struct OrderReserves {
         address token;
         uint256 amount;
+        BankType bankType;
+        uint256 bankAccountDest;
         OrderReserve inner;
     }
 
