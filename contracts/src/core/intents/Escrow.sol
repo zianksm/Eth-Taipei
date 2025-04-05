@@ -45,7 +45,7 @@ abstract contract FundsCustody is ReserveHandler {
         _useNonce(msg.sender, nonce);
 
         IIntent.OrderData memory orderData = abi.decode(_order.orderData, (IIntent.OrderData));
-        _createOrder(id, orderData.token, orderData.amount);
+        _createOrder(id, orderData.token, orderData.amount, orderData.bankType, orderData.bankNumber);
 
         // since we're doing an off/on ramp, no tokens is actually transffered to other chains, so we must opt-out
         // from the standard accounting and transfer the token here, it'll be released after the zk proof is actually verified

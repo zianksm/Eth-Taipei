@@ -18,10 +18,15 @@ interface IIntent {
         uint256 outAmount;
     }
 
+    enum BankType {
+        WISE
+    }
 
     struct OrderData {
         address token;
         uint256 amount;
+        BankType bankType;
+        uint256 bankNumber;
     }
 
     struct OrderMessage {
@@ -29,9 +34,11 @@ interface IIntent {
         uint256 amount;
     }
 
-     struct OrderReserves {
+    struct OrderReserves {
         address token;
         uint256 amount;
+        BankType bankType;
+        uint256 bankAccountDest;
         OrderReserve inner;
     }
 
