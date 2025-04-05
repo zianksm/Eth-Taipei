@@ -3,6 +3,11 @@ pragma solidity ^0.8.0;
 interface IIntent {
     type IntentId is bytes32;
 
+    struct Call {
+        address dest;
+        bytes data;
+    }
+
     struct Intents {
         address inToken;
         address outToken;
