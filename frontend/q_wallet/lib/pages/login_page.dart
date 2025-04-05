@@ -226,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'The protocol that transforms invoices into working capital. Secure, efficient, and built for the modern commodity trader.',
+                'Qwallet is an Ofac Compliant P2P On/Off Ramp Orderbook Deployed on CELO.',
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   fontSize: 18,
