@@ -1,0 +1,8 @@
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-std/=lib/forge-std/src/
+halmos-cheatcodes/=lib/openzeppelin-contracts/lib/halmos-cheatcodes/src/
+intents-framework/=lib/intents-framework/solidity/src/
+openzeppelin-contracts/=lib/openzeppelin-contracts/
+@uniswap/=node_modules/@uniswap/
+@hyperlane-xyz/=node_modules/@hyperlane-xyz/core/contracts/
