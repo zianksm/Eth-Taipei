@@ -27,6 +27,8 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
     function reserve(bytes32 id) external payable {
         _ensureNotReserved(id);
         _reserve(id, msg.sender);
+
+        emit Reserved(msg.sender, id);
     }
 
     /// @dev can only be called by verifier contract after verifying the proof
@@ -48,12 +50,14 @@ abstract contract ReserveHandler is Base7683, TokenAction, IIntent {
         emit Settle(orderIds, __placeholder);
     }
 
-    function _createOrder(bytes32 id, address token, uint256 amount, IIntent.BankType bankType, uint256 bankAccount) internal {
+    function _createOrder(bytes32 id, address token, uint256 amount, IIntent.BankType bankType, uint256 bankAccount)
+        internal
+    {
         IIntent.OrderReserves storage reserves = orderReserves[id];
         reserves.amount += amount;
         reserves.token = token;
         reserves.bankType = bankType;
-        reserves.bankAccountDest = bankAccount;
+        reserves.bankAccountDest = bankAccountDest;
     }
 
     function _ensureNotReserved(bytes32 id) internal {

@@ -5,6 +5,8 @@ interface IIntent {
     
     type IntentId is bytes32;
 
+    event Reserved(address indexed filler, bytes32 order);
+
     struct Call {
         address dest;
         bytes data;
