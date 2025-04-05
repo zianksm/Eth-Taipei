@@ -72,6 +72,9 @@ flutter:
   assets:
     - .env
     - assets/q_logo.jpg
+    - assets/bitcoin.png
+    - assets/ethereum.png
+    - assets/xrp.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
