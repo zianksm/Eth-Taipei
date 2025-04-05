@@ -17,7 +17,7 @@ contract MockToken is ERC20 {
     }
 }
 
-contract MockMailBoxReceiver is MailboxClient {
+contract MockVerifier is MailboxClient {
     IIntent.OrderMessage internal lastMessage;
 
     address internal _hub;
@@ -30,6 +30,10 @@ contract MockMailBoxReceiver is MailboxClient {
 
     function setHub(address hub) external {
         _hub = hub;
+    }
+
+    function setHubChain(uint32 chain) external {
+        _hubChain = chain;
     }
 
     function mockSettleAndVerify(bytes32 id) external {
@@ -65,7 +69,7 @@ contract BaseTest is Test {
     SimpleExecBatchModule SimpleExecBatchModuleImpl = new SimpleExecBatchModule();
 
     // TODO: replace this with actual proof verifier
-    MockMailBoxReceiver internal mockVerifier;
+    MockVerifier internal mockVerifier;
 
     uint256 internal userPk = 1;
     address internal user = vm.addr(userPk);
@@ -80,7 +84,7 @@ contract BaseTest is Test {
         verifierMailbox.addRemoteMailbox(origin, originMailbox);
 
         // TODO: replace this with actual proof verifier
-        mockVerifier = new MockMailBoxReceiver(address(verifierMailbox), origin);
+        mockVerifier = new MockVerifier(address(verifierMailbox), origin);
         hub = new IntentHub(address(mockVerifier), verifierDest, address(originMailbox));
 
         mockVerifier.setHub(address(hub));
