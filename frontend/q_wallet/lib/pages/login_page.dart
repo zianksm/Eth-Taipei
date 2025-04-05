@@ -177,20 +177,29 @@ class _LoginPageState extends State<LoginPage> {
                     height: 32,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      gradient: const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [qPrimary, qAccent],
+                      image: const DecorationImage(
+                        image: AssetImage('assets/q_logo.jpg'),
+                        fit: BoxFit.cover, // Adjust fit as needed (cover, contain, etc.)
                       ),
                     ),
                   ),
-                 const Text(
-                    'Q WALLET',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: qWhite,
-                      fontFamily: 'Inter',
+                  const SizedBox(width: 8), // Spacing between logo and text
+                  // Text with Gradient
+                  ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return const LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [qPrimary, qAccent],
+                      ).createShader(bounds);
+                    },
+                    child: const Text(
+                      'WALLET',
+                      style: TextStyle(
+                        fontSize: 20, // Adjust size as needed
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // Base color (will be overridden by gradient)
+                      ),
                     ),
                   ),
                 ],
