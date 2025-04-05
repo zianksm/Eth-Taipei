@@ -4,10 +4,28 @@ import "@hyperlane-xyz/client/MailboxClient.sol";
 import {FundsCustody} from "./Escrow.sol";
 import "intents-framework/Base7683.sol";
 import {IIntent} from "./../../interfaces/IIntent.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract IntentHub is FundsCustody, MailboxClient {
     address public verifier;
     uint32 public verifierChainId;
+
+    // weird mailbox client owner thingy, just inline simple owner impl here
+    address public _owner;
+
+    function __onlyOwnerTmp() internal {
+        require(msg.sender == _owner, "not owner");
+    }
+
+    function setVerifier(address who) external {
+        __onlyOwnerTmp();
+        verifier = who;
+    }
+
+    function setVerifierChainId(uint32 where) external {
+        __onlyOwnerTmp();
+        verifierChainId = where;
+    }
 
     modifier onlyVerifier(address caller) {
         // TODO custom errors
@@ -23,6 +41,7 @@ contract IntentHub is FundsCustody, MailboxClient {
     {
         verifier = _verifier;
         verifierChainId = _verifierChainId;
+        _owner = msg.sender;
     }
 
     function _localDomain() internal view override returns (uint32) {
