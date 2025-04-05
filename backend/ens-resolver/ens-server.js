@@ -60,7 +60,6 @@ app.post('/open-order', async (req, res) => {
         }]
     );
     return packedOrderData;
-  }
 
   const { key, fillDeadline, orderDataType, orderData } = req.body;
 
