@@ -6,7 +6,7 @@ import "@hyperlane-xyz/mock/MockMailbox.sol";
 import "@hyperlane-xyz/test/TestRecipient.sol";
 import "./../src/core/intents/IntentHub.sol";
 import "forge-std/console.sol";
-import "./../src/module/ApproveExec.sol";
+import {SimpleExecBatchModule} from "./../src/module/ApproveExec.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract MockToken is ERC20 {
@@ -66,7 +66,7 @@ contract BaseTest is Test {
     MockToken token0;
     MockToken token1;
 
-    SimpleExecBatchModule SimpleExecBatchModuleImpl = new SimpleExecBatchModule();
+    SimpleExecBatchModule simpleExecBatchModuleImpl = new SimpleExecBatchModule();
 
     // TODO: replace this with actual proof verifier
     MockVerifier internal mockVerifier;

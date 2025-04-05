@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import {IERC20} from "openzeppelin-contracts/contracts/interfaces/IERC20.sol";
+import {IERC20} from "openzeppelin-contracts/interfaces/IERC20.sol";
 import {IIntent} from "./../interfaces/IIntent.sol";
 
 contract SimpleExecBatchModule {

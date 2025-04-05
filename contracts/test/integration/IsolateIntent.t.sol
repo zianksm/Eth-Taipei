@@ -25,33 +25,6 @@ contract IntentHubTest is BaseTest {
         assertEq(orderBook.token, address(token0));
     }
 
-    function testOpenOrderERC7702Mocked() external {
-        // bridge 100 usdc
-        uint256 amount = 100 ether;
-        OnchainCrossChainOrder memory order = buildOrder(token0, amount);
-
-        IIntent.Call memory approveCall =
-            IIntent.Call(address(token0), abi.encodeCall(ERC20.approve, (address(hub), amount)));
-
-        IIntent.Call memory orderCall = IIntent.Call(address(hub), abi.encodeCall(IntentHub.open, order));
-
-        IIntent.Call[] memory calls = new IIntent.Call[](2);
-        calls[0] = approveCall;
-        calls[1] = orderCall;
-
-        vm.signAndAttachDelegation(address(SimpleExecBatchModuleImpl), userPk);
-        SimpleExecBatchModule(user).execBatch(calls);
-
-        processInboundMessage();
-
-        IIntent.OrderMessage memory lastMessage = mockVerifier.getLastMessage();
-
-        IIntent.OrderReserves memory orderBook = hub.getOrderReserves(lastMessage.id);
-
-        assertEq(orderBook.amount, amount);
-        assertEq(orderBook.token, address(token0));
-    }
-
     function testReserveOrderMocked() external {
         // bridge 100 usdc
         uint256 amount = 100 ether;

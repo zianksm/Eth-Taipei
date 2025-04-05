@@ -4,8 +4,6 @@ import {IntentLibrary} from "./../../libraries/Intent.sol";
 import "intents-framework/Base7683.sol";
 import {IIntent} from "./../../interfaces/IIntent.sol";
 import {ReserveHandler} from "./OrderReserve.sol";
-import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "openzeppelin-contracts/contracts/interfaces/IERC20.sol";
 
 // needed to lock user funds for the intent, because if not then there's a possibility the intent fails and create a DOS situation
 // where intent keeps failing, so user funds needs to be locked here
